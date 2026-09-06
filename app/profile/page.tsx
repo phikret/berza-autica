@@ -232,9 +232,9 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={passwordLoading}
-                className="w-full bg-primary-600 text-white py-2 rounded hover:bg-primary-700 disabled:opacity-50"
+                className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-50 font-semibold"
               >
-                {passwordLoading ? 'Čekaj...' : 'Promijeni lozinku'}
+                {passwordLoading ? 'Čekaj...' : 'Promeni lozinku'}
               </button>
             </form>
           </div>
