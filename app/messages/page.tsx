@@ -15,7 +15,16 @@ function MessagesContent() {
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [initializing, setInitializing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const initAttemptedRef = useRef(false)
+
+  // Auto-dismiss error nakon 5 sekundi
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [error])
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -48,6 +57,7 @@ function MessagesContent() {
     if (!session) return
     
     try {
+      setError(null)
       const response = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -65,10 +75,12 @@ function MessagesContent() {
           await fetchMessages(data.conversationId)
         }
       } else {
-        console.error('Error creating conversation:', await response.text())
+        const errorData = await response.json()
+        setError(errorData.error || 'Greška pri kreiranju konverzacije')
       }
     } catch (error) {
       console.error('Error creating initial conversation:', error)
+      setError('Greška pri kreiranju konverzacije. Pokušajte ponovo.')
     }
   }, [session, fetchConversations, fetchMessages])
 
@@ -148,6 +160,7 @@ function MessagesContent() {
     if (!newMessage.trim() || !selectedConversation) return
 
     try {
+      setError(null)
       const response = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -160,9 +173,13 @@ function MessagesContent() {
       if (response.ok) {
         setNewMessage('')
         await fetchMessages(selectedConversation.conversation.id || selectedConversation.conversation._id)
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Greška pri slanju poruke')
       }
     } catch (error) {
       console.error('Error sending message:', error)
+      setError('Greška pri slanju poruke. Pokušajte ponovo.')
     }
   }
 
@@ -172,6 +189,19 @@ function MessagesContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Error Toast */}
+      {error && (
+        <div className="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-fade-in">
+          <span>⚠️</span>
+          <span>{error}</span>
+          <button
+            onClick={() => setError(null)}
+            className="ml-2 text-white hover:text-gray-200"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Poruke</h1>
