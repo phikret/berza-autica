@@ -111,12 +111,22 @@ export default function CartPage() {
                   ))}
                 </div>
                 <div className="bg-gray-50 px-6 py-4 border-t">
-                  <Link
-                    href={`/messages?sellerId=${group.seller.id}`}
-                    className="bg-primary-600 text-white px-6 py-2 rounded hover:bg-primary-700 inline-block"
-                  >
-                    Kontaktiraj prodavca
-                  </Link>
+                  {(session?.user as any)?.id !== group.seller.id ? (
+                    <Link
+                      href={`/messages?sellerId=${group.seller.id}`}
+                      className="bg-primary-600 text-white px-6 py-2 rounded hover:bg-primary-700 inline-block"
+                    >
+                      Kontaktiraj prodavca
+                    </Link>
+                  ) : (
+                    <button
+                      disabled
+                      className="bg-gray-400 text-gray-600 px-6 py-2 rounded cursor-not-allowed"
+                      title="Ne možete kontaktirati sebe"
+                    >
+                      Kontaktiraj prodavca
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

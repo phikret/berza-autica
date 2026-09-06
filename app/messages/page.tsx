@@ -77,10 +77,14 @@ function MessagesContent() {
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Greška pri kreiranju konverzacije')
+        // Resetuj flag kako bi se korisnik mogao ponovo pokušati
+        initAttemptedRef.current = false
       }
     } catch (error) {
       console.error('Error creating initial conversation:', error)
       setError('Greška pri kreiranju konverzacije. Pokušajte ponovo.')
+      // Resetuj flag kod greške
+      initAttemptedRef.current = false
     }
   }, [session, fetchConversations, fetchMessages])
 

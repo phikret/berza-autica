@@ -207,14 +207,22 @@ export default function ProductDetail() {
                   Dodaj u korpu
                 </button>
                 
-                {session && (
+                {session && (session.user as any)?.id !== product.sellerId ? (
                   <Link
                     href={`/messages?sellerId=${product.sellerId}&productId=${product.id}`}
                     className="block w-full bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 font-semibold text-center"
                   >
                     Kontaktiraj prodavca
                   </Link>
-                )}
+                ) : session ? (
+                  <button
+                    disabled
+                    className="w-full bg-gray-300 text-gray-600 py-3 rounded-lg font-semibold cursor-not-allowed"
+                    title="Ne možete kontaktirati sebe"
+                  >
+                    Kontaktiraj prodavca
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>
