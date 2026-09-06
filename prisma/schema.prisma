@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Member {
+  id                    String         @id @default(cuid())
+  email                 String         @unique
+  password              String
+  name                  String
+  phone                 String?
+  balance               Int            @default(0)
+  role                  String         @default("member")
+  isActive              Boolean        @default(true)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  emailNotifications    Boolean        @default(false)
+  smsNotifications      Boolean        @default(false)
+  viberNotifications    Boolean        @default(false)
+  whatsappNotifications Boolean        @default(false)
+  cartItems             CartItem[]
+  products              Product[]
+  ratingsReceived       Rating[]              @relation("RatedRelation")
+  ratingsGiven          Rating[]              @relation("RaterRelation")
+  subscribers           Subscription[]        @relation("SellerRelation")
+  subscriptions         Subscription[]        @relation("SubscriberRelation")
+  balanceTransactions   BalanceTransaction[]
+  dealsAsBuyer          Deal[]                @relation("DealBuyer")
+  dealsAsSeller         Deal[]                @relation("DealSeller")
+  conversationsA        Conversation[]        @relation("ConversationA")
+  conversationsB        Conversation[]        @relation("ConversationB")
+  sentMessages          Message[]             @relation("MessageSender")
+  receivedMessages      Message[]             @relation("MessageReceiver")
+  notifications         Notification[]
+  activityLogs          ActivityLog[]
+
+  @@index([email])
+}
+
+model Category {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  slug      String     @unique
+  parentId  String?
+  createdAt DateTime   @default(now())
+  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryHierarchy")
+  products  Product[]
+
+  @@index([slug])
+}
+
+model Product {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String
+  price       Int
+  images      String[]
+  isActive    Boolean    @default(true)
+  isPromoted  Boolean    @default(false)
+  promotedAt  DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  sellerId    String
+  categoryId  String
+  cartItems   CartItem[]
+  category    Category   @relation(fields: [categoryId], references: [id])
+  seller      Member     @relation(fields: [sellerId], references: [id])
+
+  @@index([sellerId])
+  @@index([categoryId])
+  @@index([slug])
+  @@index([isActive, isPromoted])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  memberId  String
+  productId String
+  member    Member   @relation(fields: [memberId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@unique([memberId, productId])
+  @@index([memberId])
+}
+
+model Rating {
+  id            String   @id @default(cuid())
+  stars         Int
+  comment       String
+  createdAt     DateTime @default(now())
+  raterId       String
+  ratedId       String
+  transactionId String
+  deal          Deal     @relation(fields: [transactionId], references: [id])
+  rated         Member   @relation("RatedRelation", fields: [ratedId], references: [id])
+  rater         Member   @relation("RaterRelation", fields: [raterId], references: [id])
+
+  @@unique([transactionId, raterId])
+  @@index([ratedId])
+  @@index([raterId])
+  @@index([transactionId])
+}
+
+model Subscription {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  subscriberId String
+  sellerId     String
+  seller       Member   @relation("SellerRelation", fields: [sellerId], references: [id])
+  subscriber   Member   @relation("SubscriberRelation", fields: [subscriberId], references: [id])
+
+  @@unique([subscriberId, sellerId])
+  @@index([sellerId])
+}
+
+model PlatformConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@index([key])
+}
+
+model BalanceTransaction {
+  id            String   @id @default(cuid())
+  memberId      String
+  amount        Int
+  type          String
+  description   String
+  balanceBefore Int
+  balanceAfter  Int
+  createdAt     DateTime @default(now())
+  member        Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId, createdAt])
+}
+
+model Deal {
+  id         String   @id @default(cuid())
+  buyerId    String
+  sellerId   String
+  productIds String[]
+  status     String   @default("initiated")
+  buyerRated Boolean  @default(false)
+  sellerRated Boolean @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  buyer      Member   @relation("DealBuyer", fields: [buyerId], references: [id])
+  seller     Member   @relation("DealSeller", fields: [sellerId], references: [id])
+  ratings    Rating[]
+
+  @@index([buyerId])
+  @@index([sellerId])
+}
+
+model Conversation {
+  id             String    @id @default(cuid())
+  participantAId String
+  participantBId String
+  lastMessageAt  DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  participantA   Member    @relation("ConversationA", fields: [participantAId], references: [id])
+  participantB   Member    @relation("ConversationB", fields: [participantBId], references: [id])
+  messages       Message[]
+
+  @@unique([participantAId, participantBId])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  receiverId     String
+  content        String
+  productLinks   Json?
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         Member       @relation("MessageSender", fields: [senderId], references: [id])
+  receiver       Member       @relation("MessageReceiver", fields: [receiverId], references: [id])
+
+  @@index([conversationId, createdAt])
+  @@index([receiverId, isRead])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  memberId  String
+  type      String
+  title     String
+  message   String
+  data      Json?
+  channels  Json
+  sentAt    DateTime?
+  isRead    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  member    Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId, isRead])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  memberId  String
+  action    String
+  details   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId, createdAt])
+}
+

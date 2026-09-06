@@ -1,0 +1,500 @@
+# Implementation Plan: Trade Marketplace
+
+## Overview
+
+This implementation plan covers a peer-to-peer marketplace platform with token-based economy, product listings, cart management, buyer-seller messaging, ratings, and subscriptions. Built with Next.js 14, PostgreSQL (Neon), and Cloudinary.
+
+## Tasks
+
+- [x] 1. Project Setup and Database Configuration
+  - [x] 1.1 Initialize Next.js 14 project with TypeScript and Tailwind CSS
+    - Create Next.js app with App Router
+    - Configure TypeScript strict mode
+    - Set up Tailwind CSS with Serbian-friendly fonts
+    - _Requirements: 14.2, 14.3_
+
+  - [x] 1.2 Configure Prisma with PostgreSQL (Neon)
+    - Install Prisma and configure for Neon PostgreSQL
+    - Create complete schema with Member, Category, Product, CartItem, Rating, Subscription, PlatformConfig models
+    - Run initial migration
+    - _Requirements: 13.1, 13.3_
+
+  - [x] 1.3 Set up Cloudinary for image storage
+    - Configure Cloudinary SDK
+    - Create image upload utility with transformation presets
+    - _Requirements: 3.5, 14.4_
+
+- [x] 2. Checkpoint - Verify database connections
+  - Ensure Prisma migrations run successfully
+  - Verify Cloudinary upload works
+  - Ask the user if questions arise
+
+- [x] 3. Authentication System
+  - [x] 3.1 Implement NextAuth.js configuration
+    - Configure credentials provider with email/password
+    - Set up session management with JWT
+    - Create auth utility functions
+    - _Requirements: 1.1, 1.2, 1.3_
+
+  - [x] 3.2 Create registration API endpoint
+    - Implement POST /api/auth/register
+    - Add email format validation
+    - Add password strength validation (min 8 chars, mixed case, number)
+    - Hash passwords with bcrypt
+    - _Requirements: 1.1, 1.5_
+
+  - [x]* 3.3 Write property test for credential verification
+    - **Property 1: Credential Verification Correctness**
+    - **Validates: Requirements 1.2, 1.4**
+
+  - [x]* 3.4 Write property test for registration validation
+    - **Property 3: Registration Validation**
+    - **Validates: Requirements 1.1, 1.5**
+
+  - [x] 3.5 Create login and registration pages
+    - Build /login page with form and error handling
+    - Build /register page with validation feedback
+    - Display generic error "Neispravni podaci za prijavu" for security
+    - _Requirements: 1.2, 1.4_
+
+  - [x]* 3.6 Write property test for session creation
+    - **Property 2: Session Creation on Login**
+    - **Validates: Requirements 1.3**
+
+
+- [x] 4. Token Balance System
+  - [x] 4.1 Implement balance service
+    - Create balance utility functions (getBalance, addTokens, deductTokens)
+    - Implement atomic balance updates with Prisma transactions
+    - _Requirements: 2.1, 2.3, 2.4_
+
+  - [x] 4.2 Create balance API endpoints
+    - Implement GET /api/balance for current balance and history
+    - Implement POST /api/balance/topup for adding tokens
+    - Add insufficient balance validation
+    - _Requirements: 2.2, 2.3, 2.5_
+
+  - [x]* 4.3 Write property test for balance arithmetic
+    - **Property 4: Balance Arithmetic Correctness**
+    - **Validates: Requirements 2.1, 2.3, 2.4**
+
+  - [x]* 4.4 Write property test for insufficient balance prevention
+    - **Property 5: Insufficient Balance Prevention**
+    - **Validates: Requirements 2.5, 4.3**
+
+  - [x] 4.5 Create balance display component
+    - Build balance widget showing current tokens
+    - Add topup modal/page
+    - _Requirements: 2.2_
+
+- [x] 5. Checkpoint - Verify auth and balance systems
+  - Ensure registration and login work end-to-end
+  - Verify balance operations are atomic
+  - Ask the user if questions arise
+
+- [x] 6. Category Management
+  - [x] 6.1 Create category seed data and API
+    - Seed initial categories with hierarchical structure
+    - Implement GET /api/categories endpoint
+    - _Requirements: 15.4_
+
+  - [x] 6.2 Build category selector component
+    - Create hierarchical category dropdown
+    - Support parent-child category navigation
+    - _Requirements: 11.2_
+
+- [x] 7. Product Listing System
+  - [x] 7.1 Implement product creation API
+    - Create POST /api/products endpoint
+    - Validate required fields (name, category, price, description)
+    - Validate image count (1-5 images)
+    - Generate unique slug for shareable URL
+    - _Requirements: 3.1, 3.2, 3.3, 3.4_
+
+  - [x]* 7.2 Write property test for product required fields
+    - **Property 6: Product Required Fields Validation**
+    - **Validates: Requirements 3.1, 3.4**
+
+  - [x]* 7.3 Write property test for image count validation
+    - **Property 7: Product Image Count Validation**
+    - **Validates: Requirements 3.2**
+
+  - [x]* 7.4 Write property test for unique URL generation
+    - **Property 8: Unique Product URL Generation**
+    - **Validates: Requirements 3.3**
+
+  - [x] 7.5 Implement listing fee logic
+    - Track seller's total product count
+    - Apply free tier (first 15 products free)
+    - Charge 10 tokens per product beyond free tier
+    - Prevent creation if insufficient balance
+    - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
+
+  - [x]* 7.6 Write property test for listing fee calculation
+    - **Property 9: Listing Fee Calculation**
+    - **Validates: Requirements 4.1, 4.2, 4.4**
+
+  - [x] 7.7 Create product form page
+    - Build /seller/products/new page
+    - Implement ImageUploader component with Cloudinary
+    - Show remaining free listings count
+    - Display fee warning when beyond free tier
+    - _Requirements: 3.1, 3.2, 4.5_
+
+
+- [x] 8. Product Activation and Management
+  - [x] 8.1 Implement product activation API
+    - Create PATCH /api/products/[productId] for updates
+    - Add isActive toggle functionality
+    - Implement DELETE /api/products/[productId]
+    - _Requirements: 5.1, 12.3, 12.4_
+
+  - [x]* 8.2 Write property test for activation state toggle
+    - **Property 10: Product Activation State Toggle**
+    - **Validates: Requirements 5.1**
+
+  - [x] 8.3 Create seller dashboard
+    - Build /seller/dashboard page
+    - List all seller's products with status
+    - Add activate/deactivate toggles
+    - Show edit and delete actions
+    - _Requirements: 5.1, 12.3, 12.4_
+
+  - [x] 8.4 Create product edit page
+    - Build /seller/products/[productId]/edit page
+    - Pre-populate form with existing data
+    - Handle image updates
+    - _Requirements: 12.3_
+
+  - [x]* 8.5 Write property test for product edit persistence
+    - **Property 32: Product Edit Persistence**
+    - **Validates: Requirements 12.3**
+
+- [x] 9. Checkpoint - Verify product management
+  - Ensure products can be created, edited, activated/deactivated
+  - Verify listing fees are charged correctly
+  - Ask the user if questions arise
+
+- [x] 10. Product Search and Browsing
+  - [x] 10.1 Implement product search API
+    - Create GET /api/products with search, category, sort, pagination
+    - Filter to only show active products
+    - Return promoted products separately
+    - Implement keyword matching on name and description
+    - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6_
+
+  - [x]* 10.2 Write property test for inactive products hidden
+    - **Property 11: Inactive Products Hidden from Search**
+    - **Validates: Requirements 5.2, 11.4**
+
+  - [x]* 10.3 Write property test for keyword matching
+    - **Property 27: Search Keyword Matching**
+    - **Validates: Requirements 11.1**
+
+  - [x]* 10.4 Write property test for category filtering
+    - **Property 28: Search Category Filtering**
+    - **Validates: Requirements 11.2**
+
+  - [x]* 10.5 Write property test for search sorting
+    - **Property 29: Search Result Sorting**
+    - **Validates: Requirements 11.3**
+
+  - [x]* 10.6 Write property test for pagination
+    - **Property 30: Search Pagination**
+    - **Validates: Requirements 11.6**
+
+  - [x] 10.7 Create product browsing pages
+    - Build /products page with search bar and filters
+    - Create ProductGrid and ProductCard components
+    - Display promoted products in highlighted section
+    - Implement pagination controls
+    - _Requirements: 11.1, 11.2, 11.3, 11.5, 11.6_
+
+  - [x] 10.8 Create product detail page
+    - Build /products/[slug] page
+    - Display product images, description, price
+    - Show seller info with rating
+    - Add "dodaj u korpu" button
+    - _Requirements: 3.3, 6.1_
+
+
+- [x] 11. Shopping Cart System
+  - [x] 11.1 Implement cart API endpoints
+    - Create GET /api/cart returning items grouped by seller
+    - Create POST /api/cart/items to add products
+    - Create DELETE /api/cart/items/[itemId] to remove items
+    - Prevent adding own products to cart
+    - _Requirements: 6.1, 6.2, 6.4_
+
+  - [x]* 11.2 Write property test for cart add/remove
+    - **Property 12: Cart Item Addition and Removal**
+    - **Validates: Requirements 6.1, 6.4**
+
+  - [x]* 11.3 Write property test for seller grouping
+    - **Property 13: Cart Seller Grouping**
+    - **Validates: Requirements 6.2**
+
+  - [x]* 11.4 Write property test for price calculation
+    - **Property 14: Cart Price Calculation**
+    - **Validates: Requirements 6.6**
+
+  - [x]* 11.5 Write property test for cart persistence
+    - **Property 15: Cart Persistence Round Trip**
+    - **Validates: Requirements 6.5**
+
+  - [x] 11.6 Create cart page
+    - Build /cart page with SellerGroup components
+    - Display items grouped by seller with subtotals
+    - Add "Pošalji poruku" button per seller group
+    - Allow item removal
+    - _Requirements: 6.2, 6.3, 6.4, 6.6_
+
+- [x] 12. Checkpoint - Verify cart functionality
+  - Ensure cart persists across sessions
+  - Verify seller grouping and price calculations
+  - Ask the user if questions arise
+
+- [x] 13. Buyer-Seller Messaging System
+  - [x] 13.1 Implement messaging API
+    - Create POST /api/messages to send messages
+    - Create GET /api/messages/conversations for conversation list
+    - Create GET /api/messages/conversations/[id] for message thread
+    - Include product references when sent from cart
+    - _Requirements: 7.1, 7.2, 7.3, 7.5_
+
+  - [x]* 13.2 Write property test for message product references
+    - **Property 16: Message Product References**
+    - **Validates: Requirements 7.1, 7.2**
+
+  - [x]* 13.3 Write property test for conversation threading
+    - **Property 17: Conversation Threading**
+    - **Validates: Requirements 7.3, 7.5**
+
+  - [x] 13.4 Create messaging pages
+    - Build /messages page with ConversationList
+    - Build /messages/[conversationId] with MessageThread
+    - Create MessageComposer component
+    - Display product cards in messages when referenced
+    - _Requirements: 7.3, 7.4, 7.5_
+
+  - [x] 13.5 Implement message notifications
+    - Create notification on new message
+    - Update unread count in conversation
+    - _Requirements: 7.4_
+
+- [x] 14. Rating System
+  - [x] 14.1 Implement transaction tracking
+    - Create Deal record when messaging initiated from cart
+    - Track buyer/seller rating status
+    - _Requirements: 8.2, 8.3_
+
+  - [x] 14.2 Implement rating API
+    - Create POST /api/ratings endpoint
+    - Validate stars (1-5) and require comment
+    - Enforce buyer-rates-first rule
+    - Prevent duplicate ratings
+    - _Requirements: 8.1, 8.2, 8.3, 8.4_
+
+  - [x]* 14.3 Write property test for rating validation
+    - **Property 18: Rating Validation**
+    - **Validates: Requirements 8.1**
+
+  - [x]* 14.4 Write property test for rating order enforcement
+    - **Property 19: Rating Order Enforcement**
+    - **Validates: Requirements 8.2, 8.3, 8.4**
+
+  - [x] 14.5 Implement rating display
+    - Create GET /api/members/[memberId]/ratings
+    - Calculate and return average rating
+    - Return individual ratings with comments
+    - _Requirements: 8.5, 8.6_
+
+  - [x]* 14.6 Write property test for rating average calculation
+    - **Property 20: Rating Average Calculation**
+    - **Validates: Requirements 8.5**
+
+  - [x] 14.7 Create rating components
+    - Build StarRating display component
+    - Build RatingForm with star selector and comment textarea
+    - Build RatingList for profile display
+    - _Requirements: 8.1, 8.5, 8.6_
+
+
+- [x] 15. Checkpoint - Verify messaging and ratings
+  - Ensure messages include product references from cart
+  - Verify buyer-rates-first enforcement
+  - Ask the user if questions arise
+
+- [x] 16. Seller Subscription System
+  - [x] 16.1 Implement subscription API
+    - Create POST /api/subscriptions to subscribe
+    - Create DELETE /api/subscriptions/[sellerId] to unsubscribe
+    - Create GET /api/subscriptions for user's subscriptions
+    - _Requirements: 9.1, 9.6_
+
+  - [x]* 16.2 Write property test for subscription create/delete
+    - **Property 21: Subscription Creation and Deletion**
+    - **Validates: Requirements 9.1, 9.6**
+
+  - [x] 16.3 Implement notification settings API
+    - Create PATCH /api/notifications/settings
+    - Default all channels to disabled
+    - Allow enabling email, SMS, Viber, WhatsApp
+    - _Requirements: 9.4, 9.5_
+
+  - [x]* 16.4 Write property test for default notification settings
+    - **Property 23: Default Notification Settings**
+    - **Validates: Requirements 9.4**
+
+  - [x] 16.5 Implement subscriber notifications
+    - Trigger notifications when seller creates new product
+    - Send via enabled channels (email via Resend, SMS via Twilio)
+    - _Requirements: 9.2, 9.3_
+
+  - [x]* 16.6 Write property test for subscriber notification
+    - **Property 22: Subscriber Notification on New Product**
+    - **Validates: Requirements 9.2**
+
+  - [x] 16.7 Create subscription UI
+    - Add subscribe/unsubscribe button on seller profiles
+    - Build notification settings page at /profile/settings
+    - Display subscription count on seller profile
+    - _Requirements: 9.1, 9.5, 9.6, 12.5_
+
+- [x] 17. Product Promotion System
+  - [x] 17.1 Implement promotion API
+    - Create POST /api/products/[productId]/promote
+    - Charge 300 tokens for promotion
+    - Limit to max 3 promoted products per seller
+    - Create DELETE /api/products/[productId]/promote to remove
+    - _Requirements: 10.1, 10.2, 10.5_
+
+  - [x]* 17.2 Write property test for promotion cost deduction
+    - **Property 24: Promotion Cost Deduction**
+    - **Validates: Requirements 10.1**
+
+  - [x]* 17.3 Write property test for promotion limit enforcement
+    - **Property 25: Promotion Limit Enforcement**
+    - **Validates: Requirements 10.2**
+
+  - [x]* 17.4 Write property test for promoted products in search
+    - **Property 26: Promoted Products in Search Results**
+    - **Validates: Requirements 10.3, 11.5**
+
+  - [x] 17.5 Create promotion management page
+    - Build /seller/promotions page
+    - Show current promoted products (max 3)
+    - Allow promoting/unpromoting products
+    - Display promotion cost (300 tokens)
+    - _Requirements: 10.1, 10.2, 10.3, 10.5_
+
+- [x] 18. Checkpoint - Verify subscriptions and promotions
+  - Ensure notifications are sent to subscribers
+  - Verify promotion limits are enforced
+  - Ask the user if questions arise
+
+
+- [x] 19. Seller Profile System
+  - [x] 19.1 Implement seller profile API
+    - Create GET /api/members/[memberId] for public profile
+    - Return name, rating, member since date, subscription count
+    - Return active products for the seller
+    - _Requirements: 12.1, 12.2, 12.5_
+
+  - [x]* 19.2 Write property test for seller profile products
+    - **Property 31: Seller Profile Product Listing**
+    - **Validates: Requirements 12.2**
+
+  - [x] 19.3 Create seller profile page
+    - Build /profile/[memberId] page
+    - Display seller info and ratings
+    - Show active products grid
+    - Add subscribe button
+    - _Requirements: 12.1, 12.2, 12.5_
+
+- [x] 20. Admin System
+  - [x] 20.1 Implement admin configuration API
+    - Create GET /api/admin/config for current settings
+    - Create PATCH /api/admin/config to update Free_Tier_Limit, Listing_Fee, Promotion_Cost
+    - Restrict to admin users only
+    - _Requirements: 15.1, 15.2, 15.3_
+
+  - [x]* 20.2 Write property test for admin configuration
+    - **Property 33: Admin Configuration Modification**
+    - **Validates: Requirements 15.1, 15.2, 15.3**
+
+  - [x] 20.3 Implement admin category management
+    - Create POST /api/admin/categories
+    - Create PATCH /api/admin/categories/[id]
+    - Create DELETE /api/admin/categories/[id]
+    - _Requirements: 15.4_
+
+  - [x] 20.4 Implement admin member management
+    - Create GET /api/admin/members with pagination
+    - Create PATCH /api/admin/members/[id] for suspend/activate
+    - _Requirements: 15.6_
+
+  - [x]* 20.5 Write property test for member management
+    - **Property 34: Admin Member Management**
+    - **Validates: Requirements 15.6**
+
+  - [x] 20.6 Implement admin statistics API
+    - Create GET /api/admin/stats
+    - Return platform statistics (members, products, transactions)
+    - _Requirements: 15.5_
+
+  - [x] 20.7 Create admin pages
+    - Build /admin/dashboard with statistics
+    - Build /admin/config for platform settings
+    - Build /admin/members for member management
+    - Build /admin/categories for category management
+    - _Requirements: 15.1, 15.2, 15.3, 15.4, 15.5, 15.6_
+
+- [x] 21. Monthly Billing System
+  - [x] 21.1 Implement billing cycle logic
+    - Track billing cycle dates per seller
+    - Calculate fees for active products beyond free tier
+    - Send billing reminder notifications
+    - _Requirements: 5.3, 5.4, 5.5_
+
+  - [x] 21.2 Create billing notification service
+    - Send reminders before billing cycle renewal
+    - Process monthly charges for active listings
+    - _Requirements: 5.4, 5.5_
+
+- [x] 22. Final Integration and Polish
+  - [x] 22.1 Implement activity logging
+    - Log all significant actions to ActivityLog table
+    - Include member ID, action, resource, metadata
+    - _Requirements: 13.2_
+
+  - [x] 22.2 Add database indexes
+    - Create indexes on frequently queried fields
+    - Optimize search and filter queries
+    - _Requirements: 13.4_
+
+  - [x] 22.3 Create home page
+    - Build landing page with search
+    - Display promoted products
+    - Show category navigation
+    - _Requirements: 11.1, 11.5_
+
+  - [x] 22.4 Implement error handling
+    - Add Serbian error messages throughout
+    - Implement consistent ErrorResponse format
+    - Handle all error codes from design document
+    - _Requirements: 1.4, 2.5, 4.3_
+
+- [x] 23. Final Checkpoint - Complete system verification
+  - Ensure all tests pass
+  - Verify all 15 requirements are implemented
+  - Ask the user if questions arise
+
+## Notes
+
+- Tasks marked with `*` are optional property-based tests and can be skipped for faster MVP
+- Each task references specific requirements for traceability
+- Checkpoints ensure incremental validation throughout development
+- Property tests validate the 34 correctness properties from the design document
+- All user-facing text should be in Serbian as specified in the design
+- Use free-tier services: Neon (PostgreSQL), Cloudinary, Resend

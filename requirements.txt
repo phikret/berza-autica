@@ -1,0 +1,248 @@
+Requirements 
+
+# Requirements Document
+
+## Introduction
+
+Trade Marketplace is a peer-to-peer marketplace platform similar to kupujemprodajem.com where members can list products for sale and buyers can browse, add items to cart, and contact sellers directly. The platform operates on a token-based economy where 1 token equals 1 RSD (Serbian dinar). There is no direct payment/checkout functionality in v1 - transactions are completed offline after buyer-seller communication.
+
+Key features include:
+- Product listings with images and categories
+- Shopping cart grouped by seller with direct messaging
+- Mutual rating system (buyer rates first, then seller)
+- Seller subscription notifications (email/SMS/messaging apps)
+- Token balance system for listing fees and promotions
+- Tiered pricing (first 15 listings free, then 10 tokens each)
+
+## Glossary
+
+- **Member**: A registered user who can act as both Buyer and Seller
+- **Buyer**: A Member browsing and adding products to cart
+- **Seller**: A Member who lists products for sale
+- **Product**: An item listed for sale with name, category, price, description, and images
+- **Cart**: A temporary collection of products grouped by Seller
+- **Token**: Virtual currency unit (1 Token = 1 RSD/dinar)
+- **Balance**: The Token amount in a Member's account
+- **Rating**: A 5-star evaluation with mandatory comment
+- **Transaction**: A completed exchange initiated via messaging
+- **Subscription**: A Buyer following a Seller to receive notifications
+- **Promotion**: A paid feature to highlight a Product listing
+- **Activation**: The action of making a Product visible to Buyers
+- **Free_Tier_Limit**: The first 15 Products a Seller can list without Token cost
+- **Listing_Fee**: 10 Tokens charged per Product beyond Free_Tier_Limit
+- **Admin**: A system administrator who configures platform settings
+
+## Requirements
+
+### Requirement 1: Member Registration and Authentication
+
+**User Story:** As a visitor, I want to register and log in, so that I can participate as a Buyer or Seller on the platform.
+
+#### Acceptance Criteria
+
+1. THE Registration_System SHALL allow visitors to create a Member account with email and password
+2. THE Authentication_System SHALL verify Member credentials during login
+3. WHEN a Member logs in successfully, THEN THE Authentication_System SHALL create a session for the Member
+4. IF invalid credentials are provided, THEN THE Authentication_System SHALL display an error message without revealing which field is incorrect
+5. THE Registration_System SHALL validate email format and password strength before creating an account
+
+---
+
+### Requirement 2: Token Balance Management
+
+**User Story:** As a Member, I want to manage my token balance, so that I can pay for listing fees and promotions.
+
+#### Acceptance Criteria
+
+1. THE Balance_System SHALL maintain a Token balance for each Member where 1 Token equals 1 RSD
+2. WHEN a Member views their account, THEN THE Balance_System SHALL display the current Token balance
+3. THE Balance_System SHALL allow Members to add Tokens to their balance through a top-up mechanism
+4. WHEN a fee is charged, THEN THE Balance_System SHALL deduct Tokens from the Member's balance
+5. IF a Member has insufficient balance for an operation, THEN THE Balance_System SHALL prevent the operation and display an error
+
+---
+
+### Requirement 3: Product Listing Creation
+
+**User Story:** As a Seller, I want to create product listings, so that Buyers can discover and purchase my items.
+
+#### Acceptance Criteria
+
+1. THE Listing_System SHALL allow Sellers to create a Product with name, category, price, and description
+2. THE Listing_System SHALL allow Sellers to upload between 1 and 5 images per Product
+3. WHEN a Product is created, THEN THE Listing_System SHALL generate a unique shareable URL for the Product
+4. THE Listing_System SHALL validate that all required fields are provided before creating a Product
+5. THE Listing_System SHALL store Product images in a cloud storage service
+
+---
+
+### Requirement 4: Listing Limits and Pricing
+
+**User Story:** As a Seller, I want to understand the listing costs, so that I can manage my selling expenses.
+
+#### Acceptance Criteria
+
+1. THE Pricing_System SHALL allow Sellers to create up to 15 Products without any Token cost (Free_Tier_Limit)
+2. WHEN a Seller creates a Product beyond the Free_Tier_Limit, THEN THE Pricing_System SHALL charge 10 Tokens (Listing_Fee)
+3. IF a Seller has insufficient balance for the Listing_Fee, THEN THE Pricing_System SHALL prevent Product creation
+4. THE Pricing_System SHALL track the total number of Products created by each Seller
+5. THE Pricing_System SHALL display the current listing count and remaining free listings to the Seller
+
+---
+
+### Requirement 5: Product Activation and Deactivation
+
+**User Story:** As a Seller, I want to control the visibility of my products, so that I can manage what Buyers can see.
+
+#### Acceptance Criteria
+
+1. THE Activation_System SHALL allow Sellers to activate or deactivate their Products
+2. WHEN a Product is deactivated, THEN THE Activation_System SHALL hide it from Buyer searches and browsing
+3. THE Activation_System SHALL operate on a monthly billing cycle for active Products
+4. WHEN a new billing cycle begins, THEN THE Activation_System SHALL charge applicable fees for active Products beyond Free_Tier_Limit
+5. THE Activation_System SHALL notify Sellers before the billing cycle renewal
+
+---
+
+### Requirement 6: Shopping Cart Management
+
+**User Story:** As a Buyer, I want to add products to my cart, so that I can organize items I'm interested in purchasing.
+
+#### Acceptance Criteria
+
+1. THE Cart_System SHALL allow Buyers to add Products to their cart using "dodaj u korpu" button
+2. THE Cart_System SHALL group cart items by Seller
+3. WHEN viewing the cart, THEN THE Cart_System SHALL display a "Pošalji poruku" button for each Seller group
+4. THE Cart_System SHALL allow Buyers to remove individual items from the cart
+5. THE Cart_System SHALL persist cart contents across browser sessions for logged-in Members
+6. THE Cart_System SHALL display the total price per Seller group
+
+---
+
+### Requirement 7: Buyer-Seller Messaging
+
+**User Story:** As a Buyer, I want to message Sellers about products, so that I can negotiate and arrange transactions.
+
+#### Acceptance Criteria
+
+1. THE Messaging_System SHALL allow Buyers to send messages to Sellers from the cart view
+2. WHEN a message is sent from cart, THEN THE Messaging_System SHALL include links and images of the selected Products
+3. THE Messaging_System SHALL maintain a conversation thread between Buyer and Seller
+4. THE Messaging_System SHALL notify the recipient of new messages
+5. THE Messaging_System SHALL allow both parties to view message history
+
+---
+
+### Requirement 8: Rating System
+
+**User Story:** As a Member, I want to rate my transaction partners, so that the community can identify trustworthy members.
+
+#### Acceptance Criteria
+
+1. THE Rating_System SHALL use a 5-star scale with mandatory comment for all ratings
+2. WHEN a transaction is completed, THEN THE Rating_System SHALL allow the Buyer to rate the Seller first
+3. AFTER the Buyer submits a rating, THEN THE Rating_System SHALL allow the Seller to rate the Buyer
+4. THE Rating_System SHALL prevent Sellers from rating Buyers before receiving a Buyer rating
+5. THE Rating_System SHALL display average rating and total rating count on Member profiles
+6. THE Rating_System SHALL display individual ratings with comments on Member profiles
+
+---
+
+### Requirement 9: Seller Subscription and Notifications
+
+**User Story:** As a Buyer, I want to subscribe to Sellers, so that I can receive notifications about their new products.
+
+#### Acceptance Criteria
+
+1. THE Subscription_System SHALL allow Buyers to subscribe to Sellers
+2. WHEN a subscribed Seller lists a new Product, THEN THE Notification_System SHALL notify subscribed Buyers
+3. THE Notification_System SHALL support email, SMS, Viber, and WhatsApp notification channels
+4. THE Notification_System SHALL have all notification channels disabled by default
+5. THE Notification_System SHALL allow Members to enable/disable individual notification channels
+6. THE Subscription_System SHALL allow Buyers to unsubscribe from Sellers
+
+---
+
+### Requirement 10: Product Promotion
+
+**User Story:** As a Seller, I want to promote my products, so that they receive more visibility.
+
+#### Acceptance Criteria
+
+1. THE Promotion_System SHALL allow Sellers to promote Products for 300 Tokens per Product
+2. THE Promotion_System SHALL limit each Seller to a maximum of 3 promoted Products at a time
+3. WHEN a Product is promoted, THEN THE Promotion_System SHALL display it in a highlighted section
+4. IF a Seller attempts to promote more than 3 Products, THEN THE Promotion_System SHALL prevent the action
+5. THE Promotion_System SHALL allow Sellers to remove promotion from a Product
+
+---
+
+### Requirement 11: Product Browsing and Search
+
+**User Story:** As a Buyer, I want to browse and search products, so that I can find items I want to purchase.
+
+#### Acceptance Criteria
+
+1. THE Search_System SHALL allow Buyers to search Products by keyword
+2. THE Search_System SHALL allow Buyers to filter Products by category
+3. THE Search_System SHALL allow Buyers to sort Products by price, date, and relevance
+4. THE Search_System SHALL only display active Products in search results
+5. THE Search_System SHALL display promoted Products in a highlighted section above regular results
+6. THE Search_System SHALL paginate results for performance
+
+---
+
+### Requirement 12: Seller Profile and Product Management
+
+**User Story:** As a Seller, I want to manage my profile and products, so that I can maintain my marketplace presence.
+
+#### Acceptance Criteria
+
+1. THE Profile_System SHALL display Seller information including name, rating, and member since date
+2. THE Profile_System SHALL display all active Products listed by the Seller
+3. THE Management_System SHALL allow Sellers to edit their Product details
+4. THE Management_System SHALL allow Sellers to delete their Products
+5. THE Profile_System SHALL display the Seller's subscription count
+
+---
+
+### Requirement 13: Data Persistence
+
+**User Story:** As a system, I want to persist data appropriately, so that information is stored reliably and efficiently.
+
+#### Acceptance Criteria
+
+1. THE Persistence_System SHALL store all data (structured and document data) in a relational database (PostgreSQL)
+2. THE Persistence_System SHALL use free-tier database services
+3. THE Persistence_System SHALL implement appropriate indexes for query performance
+4. THE Persistence_System SHALL backup data regularly
+
+---
+
+### Requirement 14: Technology Stack
+
+**User Story:** As a developer, I want a defined technology stack, so that the application is built consistently.
+
+#### Acceptance Criteria
+
+1. THE Application SHALL be built using Node.js for the backend runtime
+2. THE Application SHALL use Next.js as the full-stack framework
+3. THE Application SHALL use React.js for the frontend UI components
+4. THE Application SHALL use free-tier cloud services for hosting and storage
+5. THE Application SHALL use free-tier notification services for email/SMS/messaging
+6. THE Application SHALL generate unique shareable URLs for each Product listing
+
+---
+
+### Requirement 15: Admin Configuration
+
+**User Story:** As an Admin, I want to configure platform settings, so that I can manage the marketplace operations.
+
+#### Acceptance Criteria
+
+1. THE Admin_System SHALL allow Admins to configure the Free_Tier_Limit value
+2. THE Admin_System SHALL allow Admins to configure the Listing_Fee value
+3. THE Admin_System SHALL allow Admins to configure the Promotion cost
+4. THE Admin_System SHALL allow Admins to manage Product categories
+5. THE Admin_System SHALL allow Admins to view platform statistics and reports
+6. THE Admin_System SHALL allow Admins to manage Member accounts (suspend/activate)

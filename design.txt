@@ -1,0 +1,1100 @@
+Disgn: 
+
+# Design Document: Trade Marketplace
+
+## Overview
+
+Trade Marketplace is a peer-to-peer marketplace platform enabling members to list products for sale and buyers to browse, organize items in a cart, and contact sellers directly. The platform uses a token-based economy (1 token = 1 RSD) for listing fees and promotions, with no direct checkout - transactions complete offline after buyer-seller communication.
+
+### Key Design Goals
+
+- **Scalability**: Support growing user base with efficient data access patterns
+- **Cost Efficiency**: Leverage free-tier services (database, storage, notifications)
+- **User Experience**: Serbian-language UI with intuitive cart and messaging flow
+- **Dual Database Strategy**: Relational DB for structured data, MongoDB for documents/logs
+- **SEO-Friendly**: Unique shareable URLs for all product listings
+
+### System Boundaries
+
+- **In Scope**: Registration, listings, cart, messaging, ratings, subscriptions, promotions, admin config
+- **Out of Scope**: Payment processing, checkout flow, shipping integration (v1)
+
+## Architecture
+
+### High-Level Architecture
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        WEB[Next.js Web App<br/>React Components]
+    end
+   
+    subgraph "Application Layer"
+        API[Next.js API Routes]
+        AUTH[Auth Service<br/>NextAuth.js]
+        UPLOAD[Image Upload<br/>Service]
+    end
+   
+    subgraph "Data Layer"
+        PG[(PostgreSQL<br/>Neon Free Tier)]
+        MONGO[(MongoDB Atlas<br/>Free Tier)]
+        BLOB[Cloudinary<br/>Free Tier Images]
+    end
+   
+    subgraph "External Services"
+        EMAIL[Resend<br/>Email Service]
+        SMS[Twilio<br/>SMS Service]
+        MSG[WhatsApp/Viber<br/>APIs]
+    end
+   
+    WEB --> API
+    API --> AUTH
+    API --> UPLOAD
+    API --> PG
+    API --> MONGO
+    UPLOAD --> BLOB
+    API --> EMAIL
+    API --> SMS
+    API --> MSG
+```
+
+### Technology Stack
+
+| Layer | Technology | Justification |
+|-------|------------|---------------|
+| Frontend | Next.js 14 + React 18 | SSR for SEO, App Router for modern patterns |
+| Backend | Next.js API Routes | Unified codebase, serverless-ready |
+| Auth | NextAuth.js | Built-in session management, extensible |
+| Relational DB | PostgreSQL (Neon) | Free tier, excellent for structured data |
+| Document DB | MongoDB Atlas | Free tier, flexible schema for logs/messages |
+| ORM | Prisma | Type-safe queries, migrations, multi-DB support |
+| Image Storage | Cloudinary | Free tier, image optimization, transformations |
+| Email | Resend | Free tier, developer-friendly API |
+| Styling | Tailwind CSS | Rapid UI development, responsive design |
+
+### Request Flow
+
+```mermaid
+sequenceDiagram
+    participant B as Browser
+    participant N as Next.js
+    participant A as Auth
+    participant P as PostgreSQL
+    participant M as MongoDB
+   
+    B->>N: Request (with session cookie)
+    N->>A: Validate session
+    A-->>N: Session valid + user context
+    N->>P: Query structured data
+    P-->>N: Data response
+    N->>M: Log activity (async)
+    N-->>B: Rendered response
+```
+
+## Components and Interfaces
+
+### Frontend Components
+
+```
+src/
+├── app/
+│   ├── (auth)/
+│   │   ├── login/page.tsx
+│   │   └── register/page.tsx
+│   ├── (main)/
+│   │   ├── page.tsx                 # Home with search
+│   │   ├── products/
+│   │   │   ├── [slug]/page.tsx      # Product detail
+│   │   │   └── page.tsx             # Browse/search
+│   │   ├── cart/page.tsx            # Cart grouped by seller
+│   │   ├── messages/
+│   │   │   ├── [conversationId]/page.tsx
+│   │   │   └── page.tsx
+│   │   └── profile/
+│   │       ├── [memberId]/page.tsx  # Public profile
+│   │       └── settings/page.tsx
+│   ├── seller/
+│   │   ├── dashboard/page.tsx
+│   │   ├── products/
+│   │   │   ├── new/page.tsx
+│   │   │   └── [productId]/edit/page.tsx
+│   │   └── promotions/page.tsx
+│   ├── admin/
+│   │   ├── dashboard/page.tsx
+│   │   ├── config/page.tsx
+│   │   └── members/page.tsx
+│   └── api/
+│       ├── auth/[...nextauth]/route.ts
+│       ├── products/
+│       ├── cart/
+│       ├── messages/
+│       ├── ratings/
+│       ├── subscriptions/
+│       ├── balance/
+│       └── admin/
+├── components/
+│   ├── ui/                          # Reusable UI components
+│   ├── products/
+│   │   ├── ProductCard.tsx
+│   │   ├── ProductGrid.tsx
+│   │   ├── ProductForm.tsx
+│   │   └── ImageUploader.tsx
+│   ├── cart/
+│   │   ├── CartItem.tsx
+│   │   ├── SellerGroup.tsx
+│   │   └── CartSummary.tsx
+│   ├── messaging/
+│   │   ├── ConversationList.tsx
+│   │   ├── MessageThread.tsx
+│   │   └── MessageComposer.tsx
+│   └── ratings/
+│       ├── StarRating.tsx
+│       ├── RatingForm.tsx
+│       └── RatingList.tsx
+└── lib/
+    ├── prisma.ts                    # Prisma client
+    ├── mongodb.ts                   # MongoDB client
+    ├── auth.ts                      # Auth config
+    └── services/
+        ├── balance.ts
+        ├── notifications.ts
+        └── images.ts
+```
+
+### API Interfaces
+
+#### Authentication API
+
+```typescript
+// POST /api/auth/register
+interface RegisterRequest {
+  email: string;
+  password: string;
+  name: string;
+}
+interface RegisterResponse {
+  success: boolean;
+  memberId?: string;
+  error?: string;
+}
+
+// POST /api/auth/[...nextauth] - handled by NextAuth
+```
+
+#### Products API
+
+```typescript
+// GET /api/products
+interface ProductsQuery {
+  search?: string;
+  category?: string;
+  sort?: 'price_asc' | 'price_desc' | 'date' | 'relevance';
+  page?: number;
+  limit?: number;
+}
+interface ProductsResponse {
+  products: Product[];
+  promoted: Product[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+// POST /api/products
+interface CreateProductRequest {
+  name: string;
+  categoryId: string;
+  price: number;
+  description: string;
+  images: string[];  // Cloudinary URLs after upload
+}
+interface CreateProductResponse {
+  success: boolean;
+  product?: Product;
+  slug?: string;
+  error?: string;
+  feeCharged?: number;
+}
+
+// PATCH /api/products/[productId]
+interface UpdateProductRequest {
+  name?: string;
+  categoryId?: string;
+  price?: number;
+  description?: string;
+  images?: string[];
+  isActive?: boolean;
+}
+
+// POST /api/products/[productId]/promote
+interface PromoteResponse {
+  success: boolean;
+  error?: string;
+  tokensCharged?: number;
+}
+```
+
+#### Cart API
+
+```typescript
+// GET /api/cart
+interface CartResponse {
+  groups: SellerGroup[];
+  totalItems: number;
+}
+interface SellerGroup {
+  seller: SellerSummary;
+  items: CartItem[];
+  subtotal: number;
+}
+
+// POST /api/cart/items
+interface AddToCartRequest {
+  productId: string;
+}
+
+// DELETE /api/cart/items/[itemId]
+```
+
+#### Messaging API
+
+```typescript
+// POST /api/messages
+interface SendMessageRequest {
+  recipientId: string;
+  content: string;
+  productIds?: string[];  // Products to include from cart
+}
+
+// GET /api/messages/conversations
+interface ConversationsResponse {
+  conversations: Conversation[];
+}
+
+// GET /api/messages/conversations/[conversationId]
+interface ConversationResponse {
+  conversation: Conversation;
+  messages: Message[];
+}
+```
+
+#### Ratings API
+
+```typescript
+// POST /api/ratings
+interface CreateRatingRequest {
+  transactionId: string;
+  targetMemberId: string;
+  stars: 1 | 2 | 3 | 4 | 5;
+  comment: string;
+}
+
+// GET /api/members/[memberId]/ratings
+interface MemberRatingsResponse {
+  averageRating: number;
+  totalRatings: number;
+  ratings: Rating[];
+}
+```
+
+#### Balance API
+
+```typescript
+// GET /api/balance
+interface BalanceResponse {
+  balance: number;
+  transactions: BalanceTransaction[];
+}
+
+// POST /api/balance/topup
+interface TopupRequest {
+  amount: number;
+  paymentMethod: string;
+}
+```
+
+#### Subscriptions API
+
+```typescript
+// POST /api/subscriptions
+interface SubscribeRequest {
+  sellerId: string;
+}
+
+// DELETE /api/subscriptions/[sellerId]
+
+// PATCH /api/notifications/settings
+interface NotificationSettingsRequest {
+  email?: boolean;
+  sms?: boolean;
+  viber?: boolean;
+  whatsapp?: boolean;
+}
+```
+
+
+## Data Models
+
+### PostgreSQL Schema (Prisma)
+
+```prisma
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Member {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  passwordHash      String
+  name              String
+  balance           Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  isAdmin           Boolean   @default(false)
+  isSuspended       Boolean   @default(false)
+ 
+  // Notification preferences
+  notifyEmail       Boolean   @default(false)
+  notifySms         Boolean   @default(false)
+  notifyViber       Boolean   @default(false)
+  notifyWhatsapp    Boolean   @default(false)
+  phone             String?
+ 
+  // Relations
+  products          Product[]
+  cartItems         CartItem[]
+  ratingsGiven      Rating[]  @relation("RaterRelation")
+  ratingsReceived   Rating[]  @relation("RatedRelation")
+  subscriptions     Subscription[] @relation("SubscriberRelation")
+  subscribers       Subscription[] @relation("SellerRelation")
+ 
+  @@index([email])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  parentId    String?
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]
+  createdAt   DateTime  @default(now())
+ 
+  @@index([slug])
+}
+
+model Product {
+  id            String    @id @default(cuid())
+  name          String
+  slug          String    @unique
+  description   String
+  price         Int       // In RSD
+  images        String[]  // Cloudinary URLs
+  isActive      Boolean   @default(true)
+  isPromoted    Boolean   @default(false)
+  promotedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+ 
+  // Relations
+  sellerId      String
+  seller        Member    @relation(fields: [sellerId], references: [id])
+  categoryId    String
+  category      Category  @relation(fields: [categoryId], references: [id])
+  cartItems     CartItem[]
+ 
+  @@index([sellerId])
+  @@index([categoryId])
+  @@index([slug])
+  @@index([isActive, isPromoted])
+}
+
+model CartItem {
+  id          String    @id @default(cuid())
+  quantity    Int       @default(1)
+  addedAt     DateTime  @default(now())
+ 
+  // Relations
+  memberId    String
+  member      Member    @relation(fields: [memberId], references: [id])
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+ 
+  @@unique([memberId, productId])
+  @@index([memberId])
+}
+
+model Rating {
+  id            String    @id @default(cuid())
+  stars         Int       // 1-5
+  comment       String
+  createdAt     DateTime  @default(now())
+ 
+  // Relations
+  raterId       String
+  rater         Member    @relation("RaterRelation", fields: [raterId], references: [id])
+  ratedId       String
+  rated         Member    @relation("RatedRelation", fields: [ratedId], references: [id])
+  transactionId String
+ 
+  @@index([ratedId])
+  @@index([transactionId])
+}
+
+model Subscription {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+ 
+  // Relations
+  subscriberId  String
+  subscriber    Member    @relation("SubscriberRelation", fields: [subscriberId], references: [id])
+  sellerId      String
+  seller        Member    @relation("SellerRelation", fields: [sellerId], references: [id])
+ 
+  @@unique([subscriberId, sellerId])
+  @@index([sellerId])
+}
+
+model PlatformConfig {
+  id              String    @id @default("config")
+  freeTierLimit   Int       @default(15)
+  listingFee      Int       @default(10)
+  promotionCost   Int       @default(300)
+  maxPromotions   Int       @default(3)
+  updatedAt       DateTime  @updatedAt
+}
+```
+
+### MongoDB Schemas
+
+```typescript
+// MongoDB Collections
+
+// transactions collection
+interface Transaction {
+  _id: ObjectId;
+  buyerId: string;        // Reference to PostgreSQL Member.id
+  sellerId: string;
+  productIds: string[];
+  status: 'initiated' | 'completed' | 'cancelled';
+  initiatedAt: Date;
+  completedAt?: Date;
+  buyerRated: boolean;
+  sellerRated: boolean;
+  metadata: {
+    totalValue: number;
+    productCount: number;
+  };
+}
+
+// messages collection
+interface Message {
+  _id: ObjectId;
+  conversationId: string;
+  senderId: string;
+  recipientId: string;
+  content: string;
+  productRefs?: {
+    productId: string;
+    name: string;
+    price: number;
+    imageUrl: string;
+  }[];
+  readAt?: Date;
+  createdAt: Date;
+}
+
+// conversations collection
+interface Conversation {
+  _id: ObjectId;
+  participantIds: [string, string];
+  lastMessageAt: Date;
+  lastMessagePreview: string;
+  unreadCount: {
+    [memberId: string]: number;
+  };
+}
+
+// balance_transactions collection
+interface BalanceTransaction {
+  _id: ObjectId;
+  memberId: string;
+  type: 'topup' | 'listing_fee' | 'promotion' | 'refund';
+  amount: number;         // Positive for credit, negative for debit
+  balanceAfter: number;
+  description: string;
+  referenceId?: string;   // Product ID for listing/promotion
+  createdAt: Date;
+}
+
+// activity_logs collection
+interface ActivityLog {
+  _id: ObjectId;
+  memberId?: string;
+  action: string;
+  resource: string;
+  resourceId?: string;
+  metadata: Record<string, any>;
+  ip?: string;
+  userAgent?: string;
+  createdAt: Date;
+}
+
+// notifications collection
+interface Notification {
+  _id: ObjectId;
+  memberId: string;
+  type: 'new_product' | 'new_message' | 'rating_received' | 'billing_reminder';
+  title: string;
+  body: string;
+  channels: {
+    email?: { sent: boolean; sentAt?: Date };
+    sms?: { sent: boolean; sentAt?: Date };
+    viber?: { sent: boolean; sentAt?: Date };
+    whatsapp?: { sent: boolean; sentAt?: Date };
+  };
+  readAt?: Date;
+  createdAt: Date;
+}
+```
+
+### Entity Relationship Diagram
+
+```mermaid
+erDiagram
+    Member ||--o{ Product : "sells"
+    Member ||--o{ CartItem : "has"
+    Member ||--o{ Rating : "gives"
+    Member ||--o{ Rating : "receives"
+    Member ||--o{ Subscription : "subscribes"
+    Member ||--o{ Subscription : "has subscribers"
+   
+    Category ||--o{ Product : "contains"
+    Category ||--o{ Category : "has children"
+   
+    Product ||--o{ CartItem : "in cart"
+   
+    Member {
+        string id PK
+        string email UK
+        string name
+        int balance
+        boolean isAdmin
+    }
+   
+    Product {
+        string id PK
+        string slug UK
+        string name
+        int price
+        boolean isActive
+        boolean isPromoted
+        string sellerId FK
+        string categoryId FK
+    }
+   
+    Category {
+        string id PK
+        string slug UK
+        string name
+        string parentId FK
+    }
+   
+    CartItem {
+        string id PK
+        string memberId FK
+        string productId FK
+        int quantity
+    }
+   
+    Rating {
+        string id PK
+        int stars
+        string comment
+        string raterId FK
+        string ratedId FK
+    }
+   
+    Subscription {
+        string id PK
+        string subscriberId FK
+        string sellerId FK
+    }
+```
+
+
+## Correctness Properties
+
+*A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+
+### Property 1: Credential Verification Correctness
+
+*For any* Member with stored credentials, login with the correct email and password should succeed, and login with any incorrect email or password should fail.
+
+**Validates: Requirements 1.2, 1.4**
+
+### Property 2: Session Creation on Login
+
+*For any* successful login attempt, a valid session should be created and associated with the authenticated Member.
+
+**Validates: Requirements 1.3**
+
+### Property 3: Registration Validation
+
+*For any* registration attempt, accounts should only be created when the email format is valid and the password meets strength requirements; invalid inputs should be rejected.
+
+**Validates: Requirements 1.1, 1.5**
+
+### Property 4: Balance Arithmetic Correctness
+
+*For any* Member balance and any sequence of topup and fee operations, the final balance should equal the initial balance plus all topups minus all fees, and the balance should never become negative.
+
+**Validates: Requirements 2.1, 2.3, 2.4**
+
+### Property 5: Insufficient Balance Prevention
+
+*For any* operation requiring tokens (listing fee, promotion), if the Member's balance is less than the required amount, the operation should fail and the balance should remain unchanged.
+
+**Validates: Requirements 2.5, 4.3**
+
+### Property 6: Product Required Fields Validation
+
+*For any* product creation attempt, the product should only be created when all required fields (name, category, price, description) are provided and valid; missing or invalid fields should cause rejection.
+
+**Validates: Requirements 3.1, 3.4**
+
+### Property 7: Product Image Count Validation
+
+*For any* product creation or update, the operation should succeed only when the image count is between 1 and 5 inclusive; 0 images or more than 5 images should be rejected.
+
+**Validates: Requirements 3.2**
+
+### Property 8: Unique Product URL Generation
+
+*For any* two distinct products created in the system, their generated slugs/URLs should be different.
+
+**Validates: Requirements 3.3**
+
+### Property 9: Listing Fee Calculation
+
+*For any* Seller, the first N products (where N = Free_Tier_Limit, default 15) should be created without token deduction, and each subsequent product should deduct exactly Listing_Fee tokens (default 10) from the Seller's balance.
+
+**Validates: Requirements 4.1, 4.2, 4.4**
+
+### Property 10: Product Activation State Toggle
+
+*For any* product, toggling its activation state should change isActive from true to false or vice versa, and the change should persist.
+
+**Validates: Requirements 5.1**
+
+### Property 11: Inactive Products Hidden from Search
+
+*For any* search query, the results should never contain products where isActive is false.
+
+**Validates: Requirements 5.2, 11.4**
+
+### Property 12: Cart Item Addition and Removal
+
+*For any* product added to a cart, it should appear in the cart contents, and after removal, it should no longer appear in the cart contents.
+
+**Validates: Requirements 6.1, 6.4**
+
+### Property 13: Cart Seller Grouping
+
+*For any* cart containing products from multiple sellers, items should be grouped such that all items from the same seller appear in the same group, and items from different sellers appear in different groups.
+
+**Validates: Requirements 6.2**
+
+### Property 14: Cart Price Calculation
+
+*For any* seller group in a cart, the displayed subtotal should equal the sum of (price × quantity) for all items in that group.
+
+**Validates: Requirements 6.6**
+
+### Property 15: Cart Persistence Round Trip
+
+*For any* logged-in Member's cart contents, after session termination and re-authentication, the cart should contain the same items as before.
+
+**Validates: Requirements 6.5**
+
+### Property 16: Message Product References
+
+*For any* message sent from the cart view with selected products, the created message should contain references to all selected products including their IDs, names, prices, and image URLs.
+
+**Validates: Requirements 7.1, 7.2**
+
+### Property 17: Conversation Threading
+
+*For any* two Members exchanging messages, all messages between them should be retrievable in a single conversation thread, ordered by creation time.
+
+**Validates: Requirements 7.3, 7.5**
+
+### Property 18: Rating Validation
+
+*For any* rating submission, it should only succeed when stars is between 1 and 5 inclusive AND a non-empty comment is provided; missing or invalid values should be rejected.
+
+**Validates: Requirements 8.1**
+
+### Property 19: Rating Order Enforcement
+
+*For any* completed transaction, the Seller should only be able to submit a rating for the Buyer after the Buyer has submitted a rating for the Seller.
+
+**Validates: Requirements 8.2, 8.3, 8.4**
+
+### Property 20: Rating Average Calculation
+
+*For any* Member with ratings, the displayed average rating should equal the arithmetic mean of all star values received, rounded appropriately.
+
+**Validates: Requirements 8.5**
+
+### Property 21: Subscription Creation and Deletion
+
+*For any* Buyer subscribing to a Seller, the subscription should be created and retrievable, and after unsubscribing, the subscription should no longer exist.
+
+**Validates: Requirements 9.1, 9.6**
+
+### Property 22: Subscriber Notification on New Product
+
+*For any* Seller with subscribers, when the Seller creates a new product, a notification should be created for each subscribed Buyer.
+
+**Validates: Requirements 9.2**
+
+### Property 23: Default Notification Settings
+
+*For any* newly registered Member, all notification channels (email, SMS, Viber, WhatsApp) should be disabled by default.
+
+**Validates: Requirements 9.4**
+
+### Property 24: Promotion Cost Deduction
+
+*For any* product promotion, exactly 300 tokens (or configured Promotion_Cost) should be deducted from the Seller's balance.
+
+**Validates: Requirements 10.1**
+
+### Property 25: Promotion Limit Enforcement
+
+*For any* Seller with 3 promoted products, attempting to promote a 4th product should fail and leave the Seller's balance unchanged.
+
+**Validates: Requirements 10.2**
+
+### Property 26: Promoted Products in Search Results
+
+*For any* search query returning results, all promoted products matching the query should appear before all non-promoted products.
+
+**Validates: Requirements 10.3, 11.5**
+
+### Property 27: Search Keyword Matching
+
+*For any* keyword search, all returned products should contain the search term in their name or description.
+
+**Validates: Requirements 11.1**
+
+### Property 28: Search Category Filtering
+
+*For any* search filtered by category, all returned products should belong to the specified category.
+
+**Validates: Requirements 11.2**
+
+### Property 29: Search Result Sorting
+
+*For any* search with a sort parameter, the results should be ordered according to the specified criterion (price ascending, price descending, date, or relevance).
+
+**Validates: Requirements 11.3**
+
+### Property 30: Search Pagination
+
+*For any* paginated search, the number of results per page should not exceed the specified limit, and navigating through pages should cover all matching results without duplicates.
+
+**Validates: Requirements 11.6**
+
+### Property 31: Seller Profile Product Listing
+
+*For any* Seller profile, all products displayed should be active products owned by that Seller, and all active products owned by that Seller should be displayed.
+
+**Validates: Requirements 12.2**
+
+### Property 32: Product Edit Persistence
+
+*For any* product edit operation, the updated fields should be persisted and retrievable with the new values.
+
+**Validates: Requirements 12.3**
+
+### Property 33: Admin Configuration Modification
+
+*For any* admin configuration change (Free_Tier_Limit, Listing_Fee, Promotion_Cost), the new value should be persisted and used in subsequent operations.
+
+**Validates: Requirements 15.1, 15.2, 15.3**
+
+### Property 34: Admin Member Management
+
+*For any* admin action to suspend or activate a Member, the Member's status should change accordingly and persist.
+
+**Validates: Requirements 15.6**
+
+## Error Handling
+
+### Authentication Errors
+
+| Error Code | Condition | User Message | HTTP Status |
+|------------|-----------|--------------|-------------|
+| AUTH_001 | Invalid credentials | "Neispravni podaci za prijavu" | 401 |
+| AUTH_002 | Session expired | "Sesija je istekla, prijavite se ponovo" | 401 |
+| AUTH_003 | Account suspended | "Vaš nalog je suspendovan" | 403 |
+| AUTH_004 | Email already registered | "Email adresa je već registrovana" | 409 |
+| AUTH_005 | Weak password | "Lozinka ne ispunjava zahteve sigurnosti" | 400 |
+
+### Balance Errors
+
+| Error Code | Condition | User Message | HTTP Status |
+|------------|-----------|--------------|-------------|
+| BAL_001 | Insufficient balance | "Nemate dovoljno tokena za ovu operaciju" | 402 |
+| BAL_002 | Invalid topup amount | "Nevažeći iznos za dopunu" | 400 |
+
+### Product Errors
+
+| Error Code | Condition | User Message | HTTP Status |
+|------------|-----------|--------------|-------------|
+| PROD_001 | Missing required field | "Sva obavezna polja moraju biti popunjena" | 400 |
+| PROD_002 | Invalid image count | "Proizvod mora imati između 1 i 5 slika" | 400 |
+| PROD_003 | Product not found | "Proizvod nije pronađen" | 404 |
+| PROD_004 | Not product owner | "Nemate dozvolu za izmenu ovog proizvoda" | 403 |
+| PROD_005 | Invalid category | "Nevažeća kategorija" | 400 |
+
+### Promotion Errors
+
+| Error Code | Condition | User Message | HTTP Status |
+|------------|-----------|--------------|-------------|
+| PROMO_001 | Max promotions reached | "Već imate maksimalan broj promovisanih proizvoda (3)" | 400 |
+| PROMO_002 | Product already promoted | "Ovaj proizvod je već promovisan" | 400 |
+| PROMO_003 | Insufficient balance | "Nemate dovoljno tokena za promociju (potrebno 300)" | 402 |
+
+### Rating Errors
+
+| Error Code | Condition | User Message | HTTP Status |
+|------------|-----------|--------------|-------------|
+| RATE_001 | Invalid stars | "Ocena mora biti između 1 i 5" | 400 |
+| RATE_002 | Missing comment | "Komentar je obavezan" | 400 |
+| RATE_003 | Buyer not rated yet | "Kupac još nije ostavio ocenu" | 400 |
+| RATE_004 | Already rated | "Već ste ocenili ovu transakciju" | 400 |
+| RATE_005 | Transaction not found | "Transakcija nije pronađena" | 404 |
+
+### Cart Errors
+
+| Error Code | Condition | User Message | HTTP Status |
+|------------|-----------|--------------|-------------|
+| CART_001 | Product not available | "Proizvod više nije dostupan" | 400 |
+| CART_002 | Own product | "Ne možete dodati sopstveni proizvod u korpu" | 400 |
+
+### Error Response Format
+
+```typescript
+interface ErrorResponse {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+    field?: string;  // For validation errors
+  };
+}
+```
+
+### Error Handling Strategy
+
+1. **Validation Errors**: Return 400 with specific field information
+2. **Authentication Errors**: Return 401/403 with generic messages (security)
+3. **Not Found Errors**: Return 404 with resource type
+4. **Business Logic Errors**: Return 400/402 with user-friendly Serbian messages
+5. **Server Errors**: Return 500 with generic message, log details internally
+
+## Testing Strategy
+
+### Dual Testing Approach
+
+This project uses both unit tests and property-based tests for comprehensive coverage:
+
+- **Unit Tests**: Verify specific examples, edge cases, and integration points
+- **Property Tests**: Verify universal properties across randomly generated inputs
+
+### Testing Framework
+
+| Type | Framework | Purpose |
+|------|-----------|---------|
+| Unit Tests | Jest + React Testing Library | Component and API testing |
+| Property Tests | fast-check | Property-based testing |
+| E2E Tests | Playwright | Critical user flows |
+| API Tests | Supertest | API endpoint testing |
+
+### Property-Based Testing Configuration
+
+```typescript
+// jest.config.js
+module.exports = {
+  testEnvironment: 'node',
+  testMatch: ['**/*.property.test.ts', '**/*.test.ts'],
+  setupFilesAfterEnv: ['./jest.setup.ts'],
+};
+
+// Property test configuration
+import fc from 'fast-check';
+
+fc.configureGlobal({
+  numRuns: 100,  // Minimum 100 iterations per property
+  verbose: true,
+});
+```
+
+### Property Test Structure
+
+Each property test must reference its design document property:
+
+```typescript
+// Example: balance.property.test.ts
+
+describe('Balance System Properties', () => {
+  // Feature: trade-marketplace, Property 4: Balance Arithmetic Correctness
+  it('should maintain correct balance after topup and fee operations', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 10000 }),  // initial balance
+        fc.array(fc.oneof(
+          fc.record({ type: fc.constant('topup'), amount: fc.integer({ min: 1, max: 1000 }) }),
+          fc.record({ type: fc.constant('fee'), amount: fc.integer({ min: 1, max: 100 }) })
+        )),
+        (initialBalance, operations) => {
+          // Test implementation
+        }
+      )
+    );
+  });
+
+  // Feature: trade-marketplace, Property 5: Insufficient Balance Prevention
+  it('should prevent operations when balance is insufficient', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 9 }),  // balance less than listing fee
+        (balance) => {
+          // Test that listing beyond free tier fails
+        }
+      )
+    );
+  });
+});
+```
+
+### Unit Test Coverage Areas
+
+1. **Authentication**
+   - Login with valid/invalid credentials
+   - Session creation and validation
+   - Password strength validation
+   - Email format validation
+
+2. **Product Management**
+   - CRUD operations
+   - Image upload validation
+   - Slug generation uniqueness
+   - Category assignment
+
+3. **Cart Operations**
+   - Add/remove items
+   - Seller grouping logic
+   - Price calculations
+   - Session persistence
+
+4. **Rating System**
+   - Star validation (1-5)
+   - Comment requirement
+   - Order enforcement (buyer first)
+   - Average calculation
+
+5. **Search and Filtering**
+   - Keyword matching
+   - Category filtering
+   - Sort ordering
+   - Pagination
+
+### Test Data Generators
+
+```typescript
+// generators.ts
+import fc from 'fast-check';
+
+export const memberArb = fc.record({
+  email: fc.emailAddress(),
+  name: fc.string({ minLength: 2, maxLength: 50 }),
+  balance: fc.integer({ min: 0, max: 100000 }),
+});
+
+export const productArb = fc.record({
+  name: fc.string({ minLength: 3, maxLength: 100 }),
+  description: fc.string({ minLength: 10, maxLength: 1000 }),
+  price: fc.integer({ min: 1, max: 10000000 }),
+  images: fc.array(fc.webUrl(), { minLength: 1, maxLength: 5 }),
+});
+
+export const ratingArb = fc.record({
+  stars: fc.integer({ min: 1, max: 5 }),
+  comment: fc.string({ minLength: 10, maxLength: 500 }),
+});
+```
+
+### Test Organization
+
+```
+tests/
+├── unit/
+│   ├── auth/
+│   │   ├── login.test.ts
+│   │   └── register.test.ts
+│   ├── products/
+│   │   ├── create.test.ts
+│   │   └── search.test.ts
+│   ├── cart/
+│   │   └── operations.test.ts
+│   └── ratings/
+│       └── submission.test.ts
+├── property/
+│   ├── balance.property.test.ts
+│   ├── products.property.test.ts
+│   ├── cart.property.test.ts
+│   ├── ratings.property.test.ts
+│   ├── search.property.test.ts
+│   └── promotions.property.test.ts
+├── integration/
+│   ├── api/
+│   │   └── endpoints.test.ts
+│   └── db/
+│       └── persistence.test.ts
+└── e2e/
+    ├── buyer-flow.spec.ts
+    ├── seller-flow.spec.ts
+    └── rating-flow.spec.ts
+```
+
+### CI/CD Test Pipeline
+
+```yaml
+# .github/workflows/test.yml
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npm run test:unit
+      - run: npm run test:property
+      - run: npm run test:integration
+```

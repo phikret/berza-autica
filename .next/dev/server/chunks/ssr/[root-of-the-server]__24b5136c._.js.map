@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 10, "column": 0}, "map": {"version":3,"sources":["file:///D:/Work/source/berza-autica/app/providers.tsx"],"sourcesContent":["'use client'\n\nimport { SessionProvider } from 'next-auth/react'\n\nexport function Providers({ children }: { children: React.ReactNode }) {\n  return <SessionProvider>{children}</SessionProvider>\n}\n\n"],"names":[],"mappings":";;;;;AAEA;AAFA;;;AAIO,SAAS,UAAU,EAAE,QAAQ,EAAiC;IACnE,qBAAO,8OAAC,iKAAe;kBAAE;;;;;;AAC3B"}}]
+}
