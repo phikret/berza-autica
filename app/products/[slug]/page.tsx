@@ -178,31 +178,41 @@ export default function ProductDetail() {
             </div>
 
             {/* Details */}
-            <div>
-              <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
+            <div className="space-y-8">
+              <div>
+                <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">
+                  {product.category.name}
+                </p>
+                <h1 className="text-4xl font-bold text-gray-900 leading-tight">
+                  {product.name}
+                </h1>
+              </div>
               
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-primary-600">{product.price} RSD</span>
-              </div>
-
-              <div className="mb-6">
-                <h2 className="font-semibold mb-2">Opis:</h2>
-                <p className="text-gray-700">{product.description}</p>
-              </div>
-
-              <div className="mb-6">
-                <p className="text-sm text-gray-600">
-                  Kategorija: <span className="font-medium">{product.category.name}</span>
-                </p>
-                <p className="text-sm text-gray-600">
-                  Prodavac: <span className="font-medium">{product.seller.name}</span>
+              <div className="border-t border-b border-gray-200 py-6">
+                <p className="text-sm text-gray-600 mb-2">Cena</p>
+                <p className="text-5xl font-bold text-primary-600">
+                  {product.price} RSD
                 </p>
               </div>
 
-              <div className="space-y-3">
+              <div>
+                <h2 className="text-sm font-semibold text-gray-900 mb-3">Opis</h2>
+                <p className="text-base text-gray-700 leading-relaxed">
+                  {product.description}
+                </p>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-600">Prodavac</p>
+                  <p className="font-medium text-gray-900">{product.seller.name}</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-4">
                 <button
                   onClick={addToCart}
-                  className="w-full bg-primary-600 text-white py-3 rounded-lg hover:bg-primary-700 font-semibold"
+                  className="w-full bg-primary-600 text-white py-3 px-6 rounded-lg hover:bg-primary-700 transition font-semibold text-base"
                 >
                   Dodaj u korpu
                 </button>
@@ -210,14 +220,14 @@ export default function ProductDetail() {
                 {session && (session.user as any)?.id !== product.sellerId ? (
                   <Link
                     href={`/messages?sellerId=${product.sellerId}&productId=${product.id}`}
-                    className="block w-full bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 font-semibold text-center"
+                    className="block w-full bg-gray-100 text-gray-900 py-3 px-6 rounded-lg hover:bg-gray-200 transition font-semibold text-base text-center"
                   >
                     Kontaktiraj prodavca
                   </Link>
                 ) : session ? (
                   <button
                     disabled
-                    className="w-full bg-gray-300 text-gray-600 py-3 rounded-lg font-semibold cursor-not-allowed"
+                    className="w-full bg-gray-200 text-gray-500 py-3 px-6 rounded-lg font-semibold text-base cursor-not-allowed"
                     title="Ne možete kontaktirati sebe"
                   >
                     Kontaktiraj prodavca
