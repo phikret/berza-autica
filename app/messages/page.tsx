@@ -99,27 +99,21 @@ function MessagesContent() {
 
     const sellerId = searchParams.get('sellerId')
     
-    console.log('Checking initialization...', { sellerId, initAttemptedRef: initAttemptedRef.current, selectedConversation: !!selectedConversation, conversationsLength: conversations.length })
-    
     // Ako nema sellerId, zaustavi se
     if (!sellerId) {
-      console.log('No sellerId in URL')
       return
     }
 
     // Ako je već pokušano inicijalizovati, zaustavi se
     if (initAttemptedRef.current) {
-      console.log('Already attempted initialization')
       return
     }
 
     // Ako je već učitana konverzacija, zaustavi se
     if (selectedConversation) {
-      console.log('Conversation already selected')
       return
     }
 
-    console.log('Initializing conversation with sellerId:', sellerId)
     initAttemptedRef.current = true
 
     const initializeFromUrl = async () => {
@@ -134,15 +128,11 @@ function MessagesContent() {
           return otherParticipant === sellerId
         })
         
-        console.log('Found conversation:', !!conversation)
-        
         if (conversation) {
           // Ako konverzacija postoji, učitaj je
-          console.log('Loading existing conversation')
           await fetchMessages(conversation.id || conversation._id)
         } else {
           // Ako ne postoji, kreiraj novu
-          console.log('Creating new conversation')
           await createInitialConversation(sellerId, productId)
         }
       } catch (error) {
