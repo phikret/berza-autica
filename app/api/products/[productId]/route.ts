@@ -139,7 +139,7 @@ export async function PATCH(
 
     // If images were updated, delete old images that are no longer used
     if (validatedData.images && validatedData.images.length > 0) {
-      const oldImages = existingProduct.images || []
+      const oldImages = (existingProduct.images as string[]) || []
       const newImages = validatedData.images || []
       const imagesToDelete = oldImages.filter((img) => !newImages.includes(img))
 
@@ -234,8 +234,8 @@ export async function DELETE(
     }
 
     // Delete product images from Cloudinary
-    if (existingProduct.images && existingProduct.images.length > 0) {
-      for (const imageUrl of existingProduct.images) {
+    if (existingProduct.images && (existingProduct.images as string[]).length > 0) {
+      for (const imageUrl of (existingProduct.images as string[])) {
         try {
           const publicId = getPublicIdFromUrl(imageUrl)
           await deleteImage(publicId)
