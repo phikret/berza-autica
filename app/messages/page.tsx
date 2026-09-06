@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, Suspense, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -14,16 +14,9 @@ function MessagesContent() {
   const [messages, setMessages] = useState<any[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
+  const [initializing, setInitializing] = useState(false)
 
-  useEffect(() => {
-    if (!session) {
-      router.push('/auth/login')
-      return
-    }
-    fetchConversations()
-  }, [session])
-
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     try {
       const response = await fetch('/api/messages')
       if (response.ok) {
@@ -35,9 +28,9 @@ function MessagesContent() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const fetchMessages = async (conversationId: string) => {
+  const fetchMessages = useCallback(async (conversationId: string) => {
     try {
       const response = await fetch(`/api/messages/${conversationId}`)
       if (response.ok) {
@@ -48,7 +41,71 @@ function MessagesContent() {
     } catch (error) {
       console.error('Error fetching messages:', error)
     }
-  }
+  }, [])
+
+  const createInitialConversation = useCallback(async (sellerId: string, productId?: string | null) => {
+    if (!session) return
+    
+    try {
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receiverId: sellerId,
+          content: 'Zainteresovan sam za vaš proizvod. Možete li da mi date više informacija?',
+          productIds: productId ? [productId] : undefined,
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        await fetchConversations()
+        if (data.conversationId) {
+          await fetchMessages(data.conversationId)
+        }
+      } else {
+        console.error('Error creating conversation:', await response.text())
+      }
+    } catch (error) {
+      console.error('Error creating initial conversation:', error)
+    }
+  }, [session, fetchConversations, fetchMessages])
+
+  useEffect(() => {
+    if (!session) {
+      router.push('/auth/login')
+      return
+    }
+    fetchConversations()
+  }, [session, router, fetchConversations])
+
+  useEffect(() => {
+    const initializeFromUrl = async () => {
+      if (conversations.length > 0 && !selectedConversation && !initializing) {
+        const sellerId = searchParams.get('sellerId')
+        const productId = searchParams.get('productId')
+        
+        if (sellerId) {
+          setInitializing(true)
+          const conversation = conversations.find(conv => {
+            const otherParticipant = conv.participantAId === (session?.user as any)?.id 
+              ? conv.participantBId 
+              : conv.participantAId
+            return otherParticipant === sellerId
+          })
+          
+          if (conversation) {
+            await fetchMessages(conversation.id || conversation._id)
+          } else {
+            await createInitialConversation(sellerId, productId)
+          }
+          setInitializing(false)
+        }
+      }
+    }
+    
+    initializeFromUrl()
+  }, [conversations, selectedConversation, searchParams, session, initializing, fetchMessages, createInitialConversation])
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -187,5 +244,3 @@ export default function MessagesPage() {
     </Suspense>
   )
 }
-
-

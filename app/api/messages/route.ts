@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { sendEmail, createNewMessageEmailTemplate } from '@/lib/services/email'
 
 const sendMessageSchema = z.object({
   receiverId: z.string(),
@@ -145,6 +146,57 @@ export async function POST(request: NextRequest) {
         isRead: false,
       },
     })
+
+    // Proveri da li je ovo nova konverzacija (prvi put)
+    const messageCount = await prisma.message.count({
+      where: { conversationId: conversation.id },
+    })
+
+    // Pošalji email notifikaciju
+    try {
+      // Dohvati podatke o pošiljaocu i primaocu
+      const sender = await prisma.member.findUnique({
+        where: { id: senderId },
+        select: { name: true, email: true },
+      })
+
+      const receiver = await prisma.member.findUnique({
+        where: { id: receiverId },
+        select: { 
+          name: true, 
+          email: true,
+          emailNotifications: true,
+        },
+      })
+
+      // Pošalji email samo ako:
+      // 1. Receiver ima email notifikacije uključene
+      // 2. Je ovo prva poruka (nova konverzacija) - UVEK pošalji
+      // 3. Ili korisnik želi email za sve poruke (może biti dodato kasnije)
+      if (sender && receiver && receiver.emailNotifications && receiver.email) {
+        // Samo šalji email za prvu poruku (inicijalizaciju konverzacije)
+        if (messageCount === 1) {
+          const conversationUrl = `${process.env.NEXTAUTH_URL}/messages?sellerId=${senderId}&productId=${productIds?.[0] || ''}`
+          
+          const emailHtml = createNewMessageEmailTemplate(
+            receiver.name || 'Korisniče',
+            sender.name || 'Nepoznati korisnik',
+            sender.email || 'unknown@example.com',
+            content,
+            conversationUrl
+          )
+
+          await sendEmail({
+            to: receiver.email,
+            subject: `Nova poruka od ${sender.name} na Berza Autica`,
+            html: emailHtml,
+          })
+        }
+      }
+    } catch (emailError) {
+      console.error('Error sending notification email:', emailError)
+      // Ne zaustavlja se slanje poruke ako email nije poslat
+    }
 
     return NextResponse.json({
       success: true,
