@@ -2,12 +2,8 @@
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
   "/api/balance/route": "app/api/balance/route.js",
   "/api/categories/route": "app/api/categories/route.js",
-  "/api/messages/route": "app/api/messages/route.js",
   "/api/products/route": "app/api/products/route.js",
-  "/messages/page": "app/messages/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
   "/page": "app/page.js",
-  "/products/[slug]/page": "app/products/[slug]/page.js",
-  "/profile/page": "app/profile/page.js",
-  "/seller/dashboard/page": "app/seller/dashboard/page.js",
-  "/seller/products/new/page": "app/seller/products/new/page.js"
+  "/profile/page": "app/profile/page.js"
 }

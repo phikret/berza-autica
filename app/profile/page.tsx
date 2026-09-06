@@ -12,6 +12,14 @@ export default function ProfilePage() {
   const [history, setHistory] = useState<any[]>([])
   const [topupAmount, setTopupAmount] = useState('')
   const [loading, setLoading] = useState(true)
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+  const [passwordLoading, setPasswordLoading] = useState(false)
+  const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   useEffect(() => {
     if (!session) {
@@ -57,6 +65,46 @@ export default function ProfilePage() {
     }
   }
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setPasswordLoading(true)
+    setPasswordMessage(null)
+
+    try {
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+          confirmPassword: passwordForm.confirmPassword,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setPasswordMessage({ type: 'success', text: 'Lozinka je uspješno promijenjena' })
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        })
+        setTimeout(() => {
+          setShowPasswordForm(false)
+          setPasswordMessage(null)
+        }, 2000)
+      } else {
+        setPasswordMessage({ type: 'error', text: data.error || 'Greška pri promjeni lozinke' })
+      }
+    } catch (error) {
+      console.error('Error changing password:', error)
+      setPasswordMessage({ type: 'error', text: 'Greška pri promjeni lozinke' })
+    } finally {
+      setPasswordLoading(false)
+    }
+  }
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Učitavanje...</div>
   }
@@ -85,8 +133,14 @@ export default function ProfilePage() {
                 <span className="ml-2 font-medium">{session?.user?.email}</span>
               </div>
               <button
+                onClick={() => setShowPasswordForm(!showPasswordForm)}
+                className="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+              >
+                {showPasswordForm ? 'Otkaži' : 'Promijeni lozinku'}
+              </button>
+              <button
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="mt-4 w-full bg-red-600 text-white py-2 rounded hover:bg-red-700"
+                className="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700"
               >
                 Odjavi se
               </button>
@@ -117,6 +171,74 @@ export default function ProfilePage() {
             </form>
           </div>
         </div>
+
+        {/* Change Password Form */}
+        {showPasswordForm && (
+          <div className="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 className="text-xl font-bold mb-4">Promijeni lozinku</h2>
+            
+            {passwordMessage && (
+              <div className={`mb-4 p-4 rounded ${passwordMessage.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                {passwordMessage.text}
+              </div>
+            )}
+
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Trenutna lozinka
+                </label>
+                <input
+                  type="password"
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="Unesite trenutnu lozinku"
+                  required
+                  disabled={passwordLoading}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nova lozinka
+                </label>
+                <input
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="Unesite novu lozinku"
+                  required
+                  disabled={passwordLoading}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Potvrdi novu lozinku
+                </label>
+                <input
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="Ponovite novu lozinku"
+                  required
+                  disabled={passwordLoading}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={passwordLoading}
+                className="w-full bg-primary-600 text-white py-2 rounded hover:bg-primary-700 disabled:opacity-50"
+              >
+                {passwordLoading ? 'Čekaj...' : 'Promijeni lozinku'}
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* Transaction History */}
         <div className="bg-white rounded-lg shadow">

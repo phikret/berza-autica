@@ -1,10 +1,12 @@
-[00:00:10.899] Server  LOG     ✓ Ready in 7.5s
-[00:00:16.131] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:18.369] Server  LOG     === PRISMA INITIALIZATION ===
-[00:00:18.372] Server  LOG     DATABASE_URL exists: true
-[00:00:18.373] Server  LOG     DATABASE_URL value: "postgresql://neondb_owner:npg_..."
-[00:00:25.106] Browser WARN    Image with src "https://res.cloudinary.com/dp7xzaj9r/image/upload/v1788118613/berza-autica/products/medvlguog5rhhf4m5wyk.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[00:00:27.939] Browser WARN    Image with src "https://res.cloudinary.com/dp7xzaj9r/image/upload/v1788128632/berza-autica/products/o20wn341xyxthklycf8s.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[00:00:27.939] Browser WARN    Image with src "https://res.cloudinary.com/dp7xzaj9r/image/upload/v1788128635/berza-autica/products/iuyesxmqhvsqa0fdghve.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[00:00:27.939] Browser WARN    Image with src "https://res.cloudinary.com/dp7xzaj9r/image/upload/v1788128638/berza-autica/products/di5ibjmclda0ws0qwxqe.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[00:02:27.184] Browser WARN    Image with src "https://res.cloudinary.com/dp7xzaj9r/image/upload/v1788723122/berza-autica/products/mac1wdlhoipmsogm3wj3.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:01.939] Server  LOG     ✓ Ready in 1230ms
+[00:00:03.873] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:04.229] Server  LOG     === PRISMA INITIALIZATION ===
+[00:00:04.232] Server  LOG     DATABASE_URL exists: true
+[00:00:04.233] Server  LOG     DATABASE_URL value: "postgresql://neondb_owner:npg_..."
+[00:00:17.421] Browser WARN    Image with src "https://res.cloudinary.com/dp7xzaj9r/image/upload/v1788723122/berza-autica/products/mac1wdlhoipmsogm3wj3.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:17.421] Browser WARN    Image with src "https://res.cloudinary.com/dp7xzaj9r/image/upload/v1788118613/berza-autica/products/medvlguog5rhhf4m5wyk.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:58.280] Server  LOG     ✓ Compiled in 155ms
+[00:01:02.841] Server  LOG     === PRISMA INITIALIZATION ===
+[00:01:02.842] Server  LOG     DATABASE_URL exists: true
+[00:01:02.842] Server  LOG     DATABASE_URL value: "postgresql://neondb_owner:npg_..."
+[00:01:02.857] Server  LOG     ✓ Compiled in 123ms
