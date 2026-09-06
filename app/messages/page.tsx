@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense, useCallback } from 'react'
+import { useEffect, useState, Suspense, useCallback, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -15,6 +15,7 @@ function MessagesContent() {
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [initializing, setInitializing] = useState(false)
+  const initAttemptedRef = useRef(false)
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -79,33 +80,78 @@ function MessagesContent() {
     fetchConversations()
   }, [session, router, fetchConversations])
 
+  // Reset flag kada se URL promeni
   useEffect(() => {
+    initAttemptedRef.current = false
+  }, [searchParams.get('sellerId')])
+
+  // Odvojen effect za inicijalizaciju URL parametara - pokreće se samo kada loading promeni
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (loading) {
+      return // Čekaj da se konverzacije učitaju
+    }
+
+    // Ako nema podataka o konverzacijama, čekaj
+    if (!conversations || conversations.length === undefined) {
+      return
+    }
+
+    const sellerId = searchParams.get('sellerId')
+    
+    console.log('Checking initialization...', { sellerId, initAttemptedRef: initAttemptedRef.current, selectedConversation: !!selectedConversation, conversationsLength: conversations.length })
+    
+    // Ako nema sellerId, zaustavi se
+    if (!sellerId) {
+      console.log('No sellerId in URL')
+      return
+    }
+
+    // Ako je već pokušano inicijalizovati, zaustavi se
+    if (initAttemptedRef.current) {
+      console.log('Already attempted initialization')
+      return
+    }
+
+    // Ako je već učitana konverzacija, zaustavi se
+    if (selectedConversation) {
+      console.log('Conversation already selected')
+      return
+    }
+
+    console.log('Initializing conversation with sellerId:', sellerId)
+    initAttemptedRef.current = true
+
     const initializeFromUrl = async () => {
-      if (conversations.length > 0 && !selectedConversation && !initializing) {
-        const sellerId = searchParams.get('sellerId')
+      try {
         const productId = searchParams.get('productId')
         
-        if (sellerId) {
-          setInitializing(true)
-          const conversation = conversations.find(conv => {
-            const otherParticipant = conv.participantAId === (session?.user as any)?.id 
-              ? conv.participantBId 
-              : conv.participantAId
-            return otherParticipant === sellerId
-          })
-          
-          if (conversation) {
-            await fetchMessages(conversation.id || conversation._id)
-          } else {
-            await createInitialConversation(sellerId, productId)
-          }
-          setInitializing(false)
+        // Pronađi konverzaciju sa prodavcem
+        const conversation = conversations.find(conv => {
+          const otherParticipant = conv.participantAId === (session?.user as any)?.id 
+            ? conv.participantBId 
+            : conv.participantAId
+          return otherParticipant === sellerId
+        })
+        
+        console.log('Found conversation:', !!conversation)
+        
+        if (conversation) {
+          // Ako konverzacija postoji, učitaj je
+          console.log('Loading existing conversation')
+          await fetchMessages(conversation.id || conversation._id)
+        } else {
+          // Ako ne postoji, kreiraj novu
+          console.log('Creating new conversation')
+          await createInitialConversation(sellerId, productId)
         }
+      } catch (error) {
+        console.error('Error initializing conversation:', error)
       }
     }
-    
+
     initializeFromUrl()
-  }, [conversations, selectedConversation, searchParams, session, initializing, fetchMessages, createInitialConversation])
+  }, [loading]) // SAMO loading kao dependency!
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -179,7 +225,14 @@ function MessagesContent() {
 
             {/* Messages */}
             <div className="col-span-2 flex flex-col">
-              {selectedConversation ? (
+              {initializing && !selectedConversation ? (
+                <div className="flex-1 flex items-center justify-center text-gray-600">
+                  <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mb-2"></div>
+                    <p>Inicijalizujem konverzaciju...</p>
+                  </div>
+                </div>
+              ) : selectedConversation ? (
                 <>
                   <div className="p-4 border-b bg-gray-50">
                     <h2 className="font-semibold">
