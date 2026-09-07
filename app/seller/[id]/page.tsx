@@ -3,11 +3,14 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useSearchParams } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import Image from 'next/image'
 import ProductCard from '@/app/components/ProductCard'
 
 export default function SellerPage() {
   const params = useParams()
   const searchParams = useSearchParams()
+  const { data: session } = useSession()
   const sellerId = params.id as string
   const currentPage = parseInt(searchParams.get('page') || '1')
 
@@ -17,9 +20,13 @@ export default function SellerPage() {
   const [sellerPhone, setSellerPhone] = useState<string | null>(null)
   const [phoneRevealed, setPhoneRevealed] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [categories, setCategories] = useState<any[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('')
 
   useEffect(() => {
     fetchSellerProducts()
+    fetchCategories()
   }, [sellerId, currentPage])
 
   const fetchSellerProducts = async () => {
@@ -41,6 +48,18 @@ export default function SellerPage() {
       setProducts([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories')
+      if (response.ok) {
+        const data = await response.json()
+        setCategories(data.categories || [])
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error)
     }
   }
 
@@ -78,17 +97,81 @@ export default function SellerPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Main Header */}
       <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center">
+            <Link href="/" className="flex items-center">
+              <Image
+                src="/logo.svg"
+                alt="Berza Autica - Mali modeli, velika strast"
+                width={150}
+                height={50}
+              />
+            </Link>
+            <nav className="flex items-center space-x-4">
+              {session ? (
+                <>
+                  <Link href="/seller/dashboard" className="text-gray-700 hover:text-gray-900">
+                    Moji proizvodi
+                  </Link>
+                  <Link href="/cart" className="text-gray-700 hover:text-gray-900">
+                    Korpa
+                  </Link>
+                  <Link href="/messages" className="text-gray-700 hover:text-gray-900">
+                    Poruke
+                  </Link>
+                  <Link href="/profile" className="text-gray-700 hover:text-gray-900">
+                    Profil
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/auth/login" className="text-gray-700 hover:text-gray-900">
+                    Prijava
+                  </Link>
+                  <Link href="/auth/register" className="bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700">
+                    Registracija
+                  </Link>
+                </>
+              )}
+            </nav>
+          </div>
+
+          {/* Search Bar */}
+          <div className="mt-4 flex gap-4">
+            <input
+              type="text"
+              placeholder="Pretraži proizvode..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="">Sve kategorije</option>
+              {categories.map((cat: any) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </header>
+
+      {/* Seller Header */}
+      <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link href="/" className="text-primary-600 hover:text-primary-700">
                 ← Nazad
               </Link>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-gray-900">
                 {sellerName || 'Proizvodi prodavca'}
-              </h1>
+              </h2>
             </div>
             
             <button
@@ -120,14 +203,14 @@ export default function SellerPage() {
           </div>
         ) : (
           <>
-            {/* Products Grid */}
+            {/* Products List */}
             <div className="mb-8">
               <p className="text-gray-600 mb-6">
                 Ukupno proizvoda: {pagination?.total}
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="space-y-4">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} variant="seller" />
+                  <ProductCard key={product.id} product={product} variant="list" />
                 ))}
               </div>
             </div>

@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
+import Image from 'next/image'
 import ProductCard from './components/ProductCard'
 
 export default function Home() {
@@ -57,16 +58,21 @@ export default function Home() {
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">Berza Autica</h1>
+            <Link href="/" className="flex items-center">
+              <Image
+                src="/logo.svg"
+                alt="Berza Autića - Mali modeli, velika strast"
+                width={150}
+                height={50}
+              />
+            </Link>
             <nav className="flex items-center space-x-4">
               {session ? (
                 <>
                   <Link href="/seller/dashboard" className="text-gray-700 hover:text-gray-900">
                     Moji proizvodi
                   </Link>
-                  <Link href="/cart" className="text-gray-700 hover:text-gray-900">
-                    Korpa
-                  </Link>
+
                   <Link href="/messages" className="text-gray-700 hover:text-gray-900">
                     Poruke
                   </Link>
@@ -142,6 +148,3 @@ export default function Home() {
     </div>
   )
 }
-
-
-

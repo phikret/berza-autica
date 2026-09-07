@@ -1,19 +1,73 @@
 'use client'
 
+import { useState } from 'react'
 import Image from 'next/image'
 
 interface ProductCardProps {
   product: any
   promoted?: boolean
-  variant?: 'default' | 'seller'
+  variant?: 'default' | 'seller' | 'list'
 }
 
 export default function ProductCard({ product, promoted = false, variant = 'default' }: ProductCardProps) {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+
   const handleSellerClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     window.location.href = `/seller/${product.seller.id}`
   }
 
+  const images = product.images || []
+  const imageCount = images.length
+
+  // List variant - horizontal layout
+  if (variant === 'list') {
+    return (
+      <div
+        onClick={() => window.location.href = `/products/${product.slug}`}
+        className="cursor-pointer"
+      >
+        <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 p-4 flex gap-4 items-start">
+          {/* Thumbnail */}
+          {product.images && product.images[0] && (
+            <div className="relative h-32 w-32 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden rounded-lg flex-shrink-0">
+              <Image
+                src={product.images[0]}
+                alt={product.name}
+                fill
+                className="object-cover object-center"
+              />
+            </div>
+          )}
+          
+          {/* Content */}
+          <div className="flex-1 flex flex-col justify-between py-2">
+            {/* Title and Description */}
+            <div>
+              <h3 className="font-bold text-base text-gray-900 line-clamp-1">
+                {product.name}
+              </h3>
+              <p className="text-sm text-gray-500 line-clamp-1 mt-1">
+                {product.description}
+              </p>
+            </div>
+            
+            {/* Price and Seller */}
+            <div className="flex items-center justify-between mt-3">
+              <div>
+                <p className="text-lg font-bold text-black">
+                  {product.price} RSD
+                </p>
+              </div>
+              <p className="text-xs text-gray-500">{product.seller.name}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Default and seller variants - card layout
   return (
     <div
       onClick={() => window.location.href = `/products/${product.slug}`}
@@ -33,65 +87,65 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
         )}
         
         {/* Content Section */}
-        <div className="p-6 space-y-4 flex flex-col h-full">
+        <div className="p-6 space-y-4">
           {/* Badge and Category */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex flex-col gap-2">
               {promoted && (
                 <div className="inline-flex items-center gap-2 w-fit">
-                  <span className="text-yellow-500">⭐</span>
                   <span className="bg-yellow-100 text-yellow-700 text-xs font-semibold px-3 py-1 rounded-full">
                     Istaknuto
                   </span>
+                  {/* Description */}
+              <p className="text-sm text-gray-500 line-clamp-2">
+                {product.description}
+              </p>
                 </div>
+                
               )}
             </div>
           </div>
-          
-          {/* Title */}
-          <div>
-            <h3 className="font-bold text-lg text-gray-900 leading-snug line-clamp-2">
-              {product.name}
-            </h3>
-          </div>
-          
-          {/* Description */}
-          <p className="text-sm text-gray-500 line-clamp-2">
-            {product.description}
-          </p>
-          
-          {/* Price */}
-          <div className="flex flex-col gap-2">
-            <p className="text-xs text-gray-400 uppercase tracking-wide font-medium">Cena</p>
-            <p className="text-2xl font-bold text-black">
-              {product.price} RSD
-            </p>
-          </div>
-          
-          {/* Footer with Seller - pushed to bottom */}
-          <div className="flex items-end justify-between pt-2 border-t border-gray-100 mt-auto">
-            {variant === 'seller' ? (
-              // Empty on seller page - phone will be shown in header
-              <div></div>
-            ) : (
-              // Show seller info on home page
-              <div 
-                className="flex items-center gap-2 hover:text-primary-600 cursor-pointer"
-                onClick={handleSellerClick}
-              >
-                <span className="text-sm text-gray-700 font-medium">
-                  {product.seller.name}
-                </span>
-                <span 
-                  className="text-xs text-gray-500 hover:underline hover:text-primary-600"
-                  onClick={handleSellerClick}
-                >
-                  Svi oglasi
-                </span>
+                        {/* Title */}
+              <div>
+                <h3 className="font-bold text-lg text-gray-900 leading-snug line-clamp-2">
+                  {product.name}
+                </h3>
               </div>
-            )}
+          <div className="flex gap-4">
+
+            <div id="left" className="flex-1">
+
+            </div>            
+            <div id="right" className="flex-shrink-0">
+              {/* Footer with Price and Seller */}
+              <div className="flex flex-col items-end justify-between pt-2">
+                <div className="flex flex-col gap-2">
+                  <p className="text-xs text-gray-400 uppercase tracking-wide font-medium">Cena &nbsp; 
+                      <span className="text-m font-bold text-black">{product.price} RSD </span>
+                  </p>
+                </div>
+                
+                {/* Seller Info */}
+                {variant !== 'seller' && (
+                  <div 
+                    className="flex items-center gap-2 hover:text-primary-600 cursor-pointer"
+                    onClick={handleSellerClick}
+                  >
+                    <span className="text-sm text-gray-700 font-medium">
+                      {product.seller.name}
+                    </span>
+                    <span 
+                      className="text-xs text-gray-500 hover:underline hover:text-primary-600"
+                    >
+                      Svi oglasi
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          
           </div>
-        </div>
+        </div>    
       </div>
     </div>
   )

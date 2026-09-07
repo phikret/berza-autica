@@ -1,12 +1,15 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { PT_Sans } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
 
-const inter = Inter({ subsets: ['latin'] })
+const ptSans = PT_Sans({ 
+  subsets: ['latin', 'cyrillic'],
+  weight: ['400', '700']
+})
 
 export const metadata: Metadata = {
-  title: 'Berza Autica - Marketplace',
+  title: 'Berza Autića - Marketplace',
   description: 'Peer-to-peer marketplace platform',
 }
 
@@ -17,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="sr">
-      <body className={inter.className}>
+      <body className={ptSans.className}>
         <Providers>{children}</Providers>
       </body>
     </html>
