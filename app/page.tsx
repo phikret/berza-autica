@@ -162,8 +162,6 @@ function ProductCard({ product, promoted = false }: { product: any; promoted?: b
         {/* Content Section */}
         <div className="p-6 space-y-4">
           {/* Badge and Category */}
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex flex-col gap-2">
               {promoted && (
                 <div className="inline-flex items-center gap-2 w-fit">
                   <span className="text-yellow-500">⭐</span>
@@ -172,11 +170,9 @@ function ProductCard({ product, promoted = false }: { product: any; promoted?: b
                   </span>
                 </div>
               )}
-              <p className="text-xs text-gray-400 uppercase tracking-widest font-medium">
+              {/* <p className="text-xs text-gray-400 uppercase tracking-widest font-medium">
                 {product.category.name}
-              </p>
-            </div>
-          </div>
+              </p> */}
           
           {/* Title */}
           <div>
@@ -193,18 +189,14 @@ function ProductCard({ product, promoted = false }: { product: any; promoted?: b
           {/* Footer with Price and Seller */}
           <div className="flex items-end justify-between pt-2 border-t border-gray-100">
             <div className="flex flex-col gap-2">
-              <p className="text-xs text-gray-400 uppercase tracking-wide font-medium">Cena</p>
-              <p className="text-2xl font-bold text-primary-600">
-                {product.price} RSD
+              <p className="text-xs text-gray-400 uppercase tracking-wide font-medium">Cena &nbsp; 
+                  <span className="text-m font-bold text-black">{product.price} RSD </span>
               </p>
             </div>
             
             {/* Seller Info */}
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
-                {product.seller.name.charAt(0).toUpperCase()}
-              </div>
-              <span className="text-sm text-gray-700 font-medium">{product.seller.name}</span>
+                 <span className="text-sm text-gray-700 font-medium">{product.seller.name}</span>
             </div>
           </div>
         </div>
