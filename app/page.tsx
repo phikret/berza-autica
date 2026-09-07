@@ -211,6 +211,12 @@ function ProductCard({ product, promoted = false }: { product: any; promoted?: b
               <span className="text-sm text-gray-700 font-medium">
                 {product.seller.name}
               </span>
+              <span 
+                className="text-xs text-gray-500 hover:underline hover:text-primary-600"
+                onClick={handleSellerClick}
+              >
+                Svi oglasi
+              </span>
             </div>
           </div>
         </div>
