@@ -205,7 +205,15 @@ export default function ProductDetail() {
               <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-600">Prodavac</p>
-                  <p className="font-medium text-gray-900">{product.seller.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-gray-900">{product.seller.name}</p>
+                    <button
+                      onClick={() => window.location.href = `/seller/${product.seller.id}`}
+                      className="text-xs text-gray-500 hover:underline hover:text-primary-600 cursor-pointer"
+                    >
+                      Svi oglasi
+                    </button>
+                  </div>
                 </div>
               </div>
 
