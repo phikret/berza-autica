@@ -195,8 +195,12 @@ function ProductCard({ product, promoted = false }: { product: any; promoted?: b
             </div>
             
             {/* Seller Info */}
-            <div className="flex items-center gap-2">
-                 <span className="text-sm text-gray-700 font-medium">{product.seller.name}</span>
+            <div className="flex items-center gap-2" onClick={(e) => e.preventDefault()}>
+              <Link href={`/seller/${product.seller.id}`}>
+                <span className="text-sm text-gray-700 font-medium hover:text-primary-600 cursor-pointer">
+                  {product.seller.name}
+                </span>
+              </Link>
             </div>
           </div>
         </div>
