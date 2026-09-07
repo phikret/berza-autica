@@ -5,9 +5,10 @@ import Image from 'next/image'
 interface ProductCardProps {
   product: any
   promoted?: boolean
+  variant?: 'default' | 'seller'
 }
 
-export default function ProductCard({ product, promoted = false }: ProductCardProps) {
+export default function ProductCard({ product, promoted = false, variant = 'default' }: ProductCardProps) {
   const handleSellerClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     window.location.href = `/seller/${product.seller.id}`
@@ -69,21 +70,26 @@ export default function ProductCard({ product, promoted = false }: ProductCardPr
           
           {/* Footer with Seller - pushed to bottom */}
           <div className="flex items-end justify-between pt-2 border-t border-gray-100 mt-auto">
-            {/* Seller Info */}
-            <div 
-              className="flex items-center gap-2 hover:text-primary-600 cursor-pointer"
-              onClick={handleSellerClick}
-            >
-              <span className="text-sm text-gray-700 font-medium">
-                {product.seller.name}
-              </span>
-              <span 
-                className="text-xs text-gray-500 hover:underline hover:text-primary-600"
+            {variant === 'seller' ? (
+              // Empty on seller page - phone will be shown in header
+              <div></div>
+            ) : (
+              // Show seller info on home page
+              <div 
+                className="flex items-center gap-2 hover:text-primary-600 cursor-pointer"
                 onClick={handleSellerClick}
               >
-                Svi oglasi
-              </span>
-            </div>
+                <span className="text-sm text-gray-700 font-medium">
+                  {product.seller.name}
+                </span>
+                <span 
+                  className="text-xs text-gray-500 hover:underline hover:text-primary-600"
+                  onClick={handleSellerClick}
+                >
+                  Svi oglasi
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
