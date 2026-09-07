@@ -144,8 +144,16 @@ export default function Home() {
 }
 
 function ProductCard({ product, promoted = false }: { product: any; promoted?: boolean }) {
+  const handleSellerClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    window.location.href = `/seller/${product.seller.id}`
+  }
+
   return (
-    <Link href={`/products/${product.slug}`}>
+    <div
+      onClick={() => window.location.href = `/products/${product.slug}`}
+      className="cursor-pointer"
+    >
       <div className={`bg-white rounded-xl overflow-hidden shadow hover:shadow-xl transition-all duration-300 ${promoted ? 'ring-2 ring-yellow-400' : ''}`}>
         {/* Image Section - Full width */}
         {product.images && product.images[0] && (
@@ -162,6 +170,8 @@ function ProductCard({ product, promoted = false }: { product: any; promoted?: b
         {/* Content Section */}
         <div className="p-6 space-y-4">
           {/* Badge and Category */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-col gap-2">
               {promoted && (
                 <div className="inline-flex items-center gap-2 w-fit">
                   <span className="text-yellow-500">⭐</span>
@@ -170,9 +180,8 @@ function ProductCard({ product, promoted = false }: { product: any; promoted?: b
                   </span>
                 </div>
               )}
-              {/* <p className="text-xs text-gray-400 uppercase tracking-widest font-medium">
-                {product.category.name}
-              </p> */}
+            </div>
+          </div>
           
           {/* Title */}
           <div>
@@ -195,17 +204,18 @@ function ProductCard({ product, promoted = false }: { product: any; promoted?: b
             </div>
             
             {/* Seller Info */}
-            <div className="flex items-center gap-2" onClick={(e) => e.preventDefault()}>
-              <Link href={`/seller/${product.seller.id}`}>
-                <span className="text-sm text-gray-700 font-medium hover:text-primary-600 cursor-pointer">
-                  {product.seller.name}
-                </span>
-              </Link>
+            <div 
+              className="flex items-center gap-2 hover:text-primary-600 cursor-pointer"
+              onClick={handleSellerClick}
+            >
+              <span className="text-sm text-gray-700 font-medium">
+                {product.seller.name}
+              </span>
             </div>
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   )
 }
 
