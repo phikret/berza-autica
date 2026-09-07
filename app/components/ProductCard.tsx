@@ -32,7 +32,7 @@ export default function ProductCard({ product, promoted = false }: ProductCardPr
         )}
         
         {/* Content Section */}
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 flex flex-col h-full">
           {/* Badge and Category */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex flex-col gap-2">
@@ -59,14 +59,16 @@ export default function ProductCard({ product, promoted = false }: ProductCardPr
             {product.description}
           </p>
           
-          {/* Footer with Price and Seller */}
-          <div className="flex items-end justify-between pt-2 border-t border-gray-100">
-            <div className="flex flex-col gap-2">
-              <p className="text-xs text-gray-400 uppercase tracking-wide font-medium">Cena &nbsp; 
-                  <span className="text-m font-bold text-black">{product.price} RSD </span>
-              </p>
-            </div>
-            
+          {/* Price */}
+          <div className="flex flex-col gap-2">
+            <p className="text-xs text-gray-400 uppercase tracking-wide font-medium">Cena</p>
+            <p className="text-2xl font-bold text-black">
+              {product.price} RSD
+            </p>
+          </div>
+          
+          {/* Footer with Seller - pushed to bottom */}
+          <div className="flex items-end justify-between pt-2 border-t border-gray-100 mt-auto">
             {/* Seller Info */}
             <div 
               className="flex items-center gap-2 hover:text-primary-600 cursor-pointer"
