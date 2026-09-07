@@ -70,6 +70,12 @@ export default function SellerPage() {
     setPhoneRevealed(true)
   }
 
+  const handlePhoneClick = () => {
+    if (sellerPhone && sellerPhone !== 'Broj telefona nije dostupan') {
+      window.location.href = `tel:${sellerPhone}`
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -86,13 +92,17 @@ export default function SellerPage() {
             </div>
             
             <button
-              onClick={handleShowPhone}
-              className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition font-medium"
+              onClick={() => {
+                if (phoneRevealed && sellerPhone) {
+                  handlePhoneClick()
+                } else {
+                  handleShowPhone()
+                }
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg transition font-semibold text-base shadow-md cursor-pointer"
             >
               {phoneRevealed && sellerPhone ? (
-                <a href={`tel:${sellerPhone}`} className="hover:underline">
-                  {sellerPhone}
-                </a>
+                <span>{sellerPhone}</span>
               ) : (
                 'Klikni za broj telefona'
               )}
