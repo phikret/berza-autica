@@ -160,10 +160,10 @@ function ProductCard({ product, promoted = false }: { product: any; promoted?: b
         )}
         
         {/* Content Section */}
-        <div className="p-6">
+        <div className="p-6 space-y-4">
           {/* Badge and Category */}
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex flex-col gap-2 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-col gap-2">
               {promoted && (
                 <div className="inline-flex items-center gap-2 w-fit">
                   <span className="text-yellow-500">⭐</span>
@@ -178,39 +178,33 @@ function ProductCard({ product, promoted = false }: { product: any; promoted?: b
             </div>
           </div>
           
-          {/* Main Content with Footer */}
-          <div className="flex gap-4">
-            {/* Left: Title and Description */}
-            <div className="flex-1 space-y-3">
-              {/* Title */}
-              <div>
-                <h3 className="font-bold text-lg text-gray-900 leading-snug line-clamp-2">
-                  {product.name}
-                </h3>
-              </div>
-              
-              {/* Description */}
-              <p className="text-sm text-gray-500 line-clamp-2">
-                {product.description}
+          {/* Title */}
+          <div>
+            <h3 className="font-bold text-lg text-gray-900 leading-snug line-clamp-2">
+              {product.name}
+            </h3>
+          </div>
+          
+          {/* Description */}
+          <p className="text-sm text-gray-500 line-clamp-2">
+            {product.description}
+          </p>
+          
+          {/* Footer with Price and Seller */}
+          <div className="flex items-end justify-between pt-2 border-t border-gray-100">
+            <div className="flex flex-col gap-2">
+              <p className="text-xs text-gray-400 uppercase tracking-wide font-medium">Cena</p>
+              <p className="text-2xl font-bold text-primary-600">
+                {product.price} RSD
               </p>
             </div>
             
-            {/* Right: Price and Seller */}
-            <div className="flex items-end justify-between pt-2 border-t border-gray-100 flex-col gap-4 min-w-fit">
-              <div className="flex flex-col gap-2">
-                <p className="text-xs text-gray-400 uppercase tracking-wide font-medium">Cena</p>
-                <p className="text-2xl font-bold text-primary-600">
-                  {product.price} RSD
-                </p>
+            {/* Seller Info */}
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                {product.seller.name.charAt(0).toUpperCase()}
               </div>
-              
-              {/* Seller Avatar */}
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full flex items-center justify-center text-xs font-bold text-gray-700 flex-shrink-0">
-                  {product.seller.name.charAt(0).toUpperCase()}
-                </div>
-                <span className="text-sm text-gray-600 font-medium">{product.seller.name}</span>
-              </div>
+              <span className="text-sm text-gray-700 font-medium">{product.seller.name}</span>
             </div>
           </div>
         </div>
