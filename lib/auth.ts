@@ -28,6 +28,10 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Nalog je deaktiviran')
         }
 
+        if (!member.emailVerified) {
+          throw new Error('Email adresa nije verificirana. Molimo provjerite vašu inbox.')
+        }
+
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
           member.password

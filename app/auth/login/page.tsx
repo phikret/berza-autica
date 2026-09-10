@@ -37,6 +37,8 @@ export default function LoginPage() {
     }
   }
 
+  const isEmailNotVerifiedError = error.includes('Email adresa nije verificirana')
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -49,6 +51,16 @@ export default function LoginPage() {
           {error && (
             <div className="rounded-md bg-red-50 p-4">
               <p className="text-sm text-red-800">{error}</p>
+              {isEmailNotVerifiedError && (
+                <p className="text-xs text-red-700 mt-3">
+                  <Link
+                    href="/auth/resend-verification"
+                    className="font-semibold hover:underline"
+                  >
+                    Kliknite ovdje da vam ponovo pošaljemo verifikacijski email
+                  </Link>
+                </p>
+              )}
             </div>
           )}
           <div className="rounded-md shadow-sm -space-y-px">

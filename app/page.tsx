@@ -85,10 +85,9 @@ export default function Home() {
                   <Link href="/auth/login" className="text-gray-700 hover:text-gray-900">
                     Prijava
                   </Link>
-                  <Link href="/auth/register" className="bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700">
+                  <Link href="/auth/register" className="text-gray-700 hover:text-gray-900 px-4 py-2 rounded hover:bg-primary-700">
                     Registracija
-                  </Link>
-                </>
+                  </Link>                </>
               )}
             </nav>
           </div>

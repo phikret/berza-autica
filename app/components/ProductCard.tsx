@@ -18,7 +18,6 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
   }
 
   const images = product.images || []
-  const imageCount = images.length
 
   // List variant - horizontal layout
   if (variant === 'list') {
@@ -67,7 +66,7 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
     )
   }
 
-  // Default and seller variants - card layout
+  // Default and seller variants - card layout. When in seller page, do not show 'Show all'
   return (
     <div
       onClick={() => window.location.href = `/products/${product.slug}`}
@@ -77,58 +76,65 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
         {/* Image Section - Full width */}
         {product.images && product.images[0] && (
           <div className="relative h-64 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden group">
+            
             <Image
               src={product.images[0]}
               alt={product.name}
               fill
               className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
             />
+
           </div>
         )}
         
         {/* Content Section */}
-        <div className="p-6 space-y-4">
+        <div className="p-4 space-y-3">
+            
           {/* Badge and Category */}
           <div className="flex items-start justify-between gap-3">
-            <div className="flex flex-col gap-2">
-              {promoted && (
-                <div className="inline-flex items-center gap-2 w-fit">
-                  <span className="bg-yellow-100 text-yellow-700 text-xs font-semibold px-3 py-1 rounded-full">
+            {promoted && (
+            <span className="bg-yellow-100 text-yellow-700 text-xs font-semibold px-3 py-1 rounded-full">
                     Istaknuto
-                  </span>
-                  {/* Description */}
-              <p className="text-sm text-gray-500 line-clamp-2">
-                {product.description}
-              </p>
-                </div>
-                
-              )}
-            </div>
-          </div>
-                        {/* Title */}
-              <div>
+            </span>)}
+             <div>
                 <h3 className="font-bold text-lg text-gray-900 leading-snug line-clamp-2">
                   {product.name}
                 </h3>
-              </div>
+             </div>
+          </div>
+                        {/* Title */}
+             
           <div className="flex gap-4">
 
             <div id="left" className="flex-1">
-
+                <div className="flex flex-col gap-2">
+                  {promoted && (
+                    <div className="inline-flex items-center gap-2 w-fit">
+                      {/* Description */}
+                    <p className="text-sm text-gray-500 line-clamp-2">
+                    {product.description}
+                  </p>
+                </div>
+                )}
+                </div>
             </div>            
             <div id="right" className="flex-shrink-0">
               {/* Footer with Price and Seller */}
               <div className="flex flex-col items-end justify-between pt-2">
                 <div className="flex flex-col gap-2">
-                  <p className="text-xs text-gray-400 uppercase tracking-wide font-medium">Cena &nbsp; 
-                      <span className="text-m font-bold text-black">{product.price} RSD </span>
+                  <p className="text-m text-gray-400  tracking-wide font-medium">Cena &nbsp; 
+                      <span className="text-xl font-bold text-black">{product.price} RSD </span>
                   </p>
                 </div>
-                
-                {/* Seller Info */}
+             </div>
+           
+              </div>
+              
+          </div>
+          {/* Seller Info */}
                 {variant !== 'seller' && (
                   <div 
-                    className="flex items-center gap-2 hover:text-primary-600 cursor-pointer"
+                    className="flex items-center gap-2 hover:text-primary-600 cursor-pointer justify-end"
                     onClick={handleSellerClick}
                   >
                     <span className="text-sm text-gray-700 font-medium">
@@ -141,10 +147,6 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
                     </span>
                   </div>
                 )}
-              </div>
-            </div>
-          
-          </div>
         </div>    
       </div>
     </div>

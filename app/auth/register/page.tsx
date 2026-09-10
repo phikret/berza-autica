@@ -1,11 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+declare global {
+  interface Window {
+    hcaptcha: {
+      render: (elementId: string, options: {
+        sitekey: string
+        theme?: 'light' | 'dark'
+        callback?: (token: string) => void
+        'error-callback'?: () => void
+      }) => void
+      reset: () => void
+      getResponse: () => string
+      remove: () => void
+    }
+  }
+}
+
 export default function RegisterPage() {
   const router = useRouter()
+  const captchaRef = useRef<HTMLDivElement>(null)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -15,10 +32,42 @@ export default function RegisterPage() {
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+
+  // Load hCaptcha script
+  useEffect(() => {
+    const script = document.createElement('script')
+    script.src = 'https://js.hcaptcha.com/1/api.js'
+    script.async = true
+    script.defer = true
+    document.body.appendChild(script)
+
+    script.onload = () => {
+      if (captchaRef.current && window.hcaptcha) {
+        window.hcaptcha.render('captcha-container', {
+          sitekey: process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || '',
+          callback: (token: string) => setCaptchaToken(token),
+          'error-callback': () => setCaptchaToken(''),
+        })
+      }
+    }
+
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script)
+      }
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (!captchaToken) {
+      setError('Molimo riješite CAPTCHA')
+      return
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Lozinke se ne poklapaju')
@@ -36,6 +85,7 @@ export default function RegisterPage() {
           password: formData.password,
           name: formData.name,
           phone: formData.phone || undefined,
+          captchaToken,
         }),
       })
 
@@ -43,12 +93,34 @@ export default function RegisterPage() {
 
       if (!response.ok) {
         setError(data.error || 'Došlo je do greške pri registraciji')
+        // Reset captcha on error
+        if (window.hcaptcha) {
+          window.hcaptcha.reset()
+          setCaptchaToken('')
+        }
         return
       }
 
-      router.push('/auth/login?registered=true')
+      setSuccessMessage('Provjerite vašu email adresu za potvrdu registracije!')
+      // Clear form
+      setFormData({
+        email: '',
+        password: '',
+        confirmPassword: '',
+        name: '',
+        phone: '',
+      })
+      // Reset captcha
+      if (window.hcaptcha) {
+        window.hcaptcha.reset()
+        setCaptchaToken('')
+      }
     } catch (err) {
       setError('Došlo je do greške pri registraciji')
+      if (window.hcaptcha) {
+        window.hcaptcha.reset()
+        setCaptchaToken('')
+      }
     } finally {
       setLoading(false)
     }
@@ -66,6 +138,12 @@ export default function RegisterPage() {
           {error && (
             <div className="rounded-md bg-red-50 p-4">
               <p className="text-sm text-red-800">{error}</p>
+            </div>
+          )}
+          {successMessage && (
+            <div className="rounded-md bg-green-50 p-4">
+              <p className="text-sm text-green-800">{successMessage}</p>
+              <p className="text-xs text-green-700 mt-2">Ako nije primljena u roku od nekoliko minuta, provjerite spam folder ili pokušajte ponovo.</p>
             </div>
           )}
           <div className="space-y-4">
@@ -138,15 +216,18 @@ export default function RegisterPage() {
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
               />
             </div>
+
+            {/* hCaptcha */}
+            <div ref={captchaRef} id="captcha-container" className="flex justify-center" />
           </div>
 
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !captchaToken}
               className="w-full rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Kreiranje naloga...' : 'Registrujte se'}
+              {loading ? 'Kreiiranje naloga...' : 'Registrujte se'}
             </button>
           </div>
 
