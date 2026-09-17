@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react'
 import MessageBadge from './MessageBadge'
 
 export default function Header() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
 
   return (
     <header className="bg-gradient-to-r from-blue-50 to-blue-10 border-b border-blue-200">
@@ -21,7 +21,13 @@ export default function Header() {
             />
           </Link>
           <nav className="flex items-center space-x-6">
-            {session ? (
+            {status === 'loading' ? (
+              // Skeleton loading state
+              <div className="flex items-center space-x-4">
+                <div className="h-6 w-24 bg-blue-200 rounded animate-pulse"></div>
+                <div className="h-6 w-24 bg-blue-200 rounded animate-pulse"></div>
+              </div>
+            ) : session ? (
               <>
                 <Link href="/seller/dashboard" className="text-blue-900 hover:text-blue-900 font-semibold transition-colors">
                   Moji proizvodi
