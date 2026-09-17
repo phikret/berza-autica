@@ -16,6 +16,7 @@ function MessagesContent() {
   const [loading, setLoading] = useState(true)
   const [initializing, setInitializing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [unreadCount, setUnreadCount] = useState(0)
   const initAttemptedRef = useRef(false)
 
   // Auto-dismiss error nakon 5 sekundi
@@ -32,6 +33,7 @@ function MessagesContent() {
       if (response.ok) {
         const data = await response.json()
         setConversations(data.conversations || [])
+        setUnreadCount(data.unreadCount || 0)
       }
     } catch (error) {
       console.error('Error fetching conversations:', error)
@@ -77,13 +79,11 @@ function MessagesContent() {
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Greška pri kreiranju konverzacije')
-        // Resetuj flag kako bi se korisnik mogao ponovo pokušati
         initAttemptedRef.current = false
       }
     } catch (error) {
       console.error('Error creating initial conversation:', error)
       setError('Greška pri kreiranju konverzacije. Pokušajte ponovo.')
-      // Resetuj flag kod greške
       initAttemptedRef.current = false
     }
   }, [session, fetchConversations, fetchMessages])
@@ -96,36 +96,29 @@ function MessagesContent() {
     fetchConversations()
   }, [session, router, fetchConversations])
 
-  // Reset flag kada se URL promeni
   useEffect(() => {
     initAttemptedRef.current = false
   }, [searchParams.get('sellerId')])
 
-  // Odvojen effect za inicijalizaciju URL parametara - pokreće se samo kada loading promeni
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (loading) {
-      return // Čekaj da se konverzacije učitaju
+      return
     }
 
-    // Ako nema podataka o konverzacijama, čekaj
     if (!conversations || conversations.length === undefined) {
       return
     }
 
     const sellerId = searchParams.get('sellerId')
     
-    // Ako nema sellerId, zaustavi se
     if (!sellerId) {
       return
     }
 
-    // Ako je već pokušano inicijalizovati, zaustavi se
     if (initAttemptedRef.current) {
       return
     }
 
-    // Ako je već učitana konverzacija, zaustavi se
     if (selectedConversation) {
       return
     }
@@ -136,7 +129,6 @@ function MessagesContent() {
       try {
         const productId = searchParams.get('productId')
         
-        // Pronađi konverzaciju sa prodavcem
         const conversation = conversations.find(conv => {
           const otherParticipant = conv.participantAId === (session?.user as any)?.id 
             ? conv.participantBId 
@@ -145,10 +137,8 @@ function MessagesContent() {
         })
         
         if (conversation) {
-          // Ako konverzacija postoji, učitaj je
           await fetchMessages(conversation.id || conversation._id)
         } else {
-          // Ako ne postoji, kreiraj novu
           await createInitialConversation(sellerId, productId)
         }
       } catch (error) {
@@ -157,7 +147,7 @@ function MessagesContent() {
     }
 
     initializeFromUrl()
-  }, [loading]) // SAMO loading kao dependency!
+  }, [loading])
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -217,53 +207,69 @@ function MessagesContent() {
         <div className="bg-white rounded-lg shadow overflow-hidden" style={{ height: '600px' }}>
           <div className="grid grid-cols-3 h-full">
             {/* Conversations List */}
-            <div className="col-span-1 border-r overflow-y-auto">
-              <div className="p-4 border-b bg-gray-50">
-                <h2 className="font-semibold">Konverzacije</h2>
+            <div className="col-span-1 border-r border-gray-200 overflow-y-auto">
+              <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 sticky top-0 z-10">
+                <div className="flex justify-between items-center">
+                  <h2 className="font-semibold text-gray-800">Konverzacije</h2>
+                  {unreadCount > 0 && (
+                    <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </div>
               </div>
               {conversations.length === 0 ? (
-                <div className="p-4 text-center text-gray-600">
+                <div className="p-4 text-center text-gray-500">
                   Nemate poruka
                 </div>
               ) : (
-                <div className="divide-y">
-                  {conversations.map((conv) => (
-                    <button
-                      key={conv.id || conv._id}
-                      onClick={() => fetchMessages(conv.id || conv._id)}
-                      className={`w-full p-4 text-left hover:bg-gray-50 ${
-                        (selectedConversation?.conversation.id || selectedConversation?.conversation._id) === (conv.id || conv._id) ? 'bg-gray-100' : ''
-                      }`}
-                    >
-                      <div className="font-medium">Konverzacija</div>
-                      {conv.lastMessage && (
-                        <div className="text-sm text-gray-600 truncate">
-                          {conv.lastMessage.content}
+                <div className="divide-y divide-gray-200">
+                  {conversations.map((conv) => {
+                    const lastMsg = conv.lastMessage
+                    const productTitle = lastMsg?.productLinks?.[0]?.name || 'Konverzacija'
+                    
+                    return (
+                      <button
+                        key={conv.id || conv._id}
+                        onClick={() => fetchMessages(conv.id || conv._id)}
+                        className={`w-full p-4 text-left transition-colors hover:bg-gray-50 ${
+                          (selectedConversation?.conversation.id || selectedConversation?.conversation._id) === (conv.id || conv._id) 
+                            ? 'bg-blue-100 border-l-4 border-blue-600' 
+                            : ''
+                        }`}
+                      >
+                        <div className="font-medium text-gray-900 text-sm truncate">
+                          {productTitle}
                         </div>
-                      )}
-                    </button>
-                  ))}
+                        {conv.lastMessage && (
+                          <div className="text-xs text-gray-600 truncate mt-1">
+                            {conv.lastMessage.content}
+                          </div>
+                        )}
+                      </button>
+                    )
+                  })}
                 </div>
               )}
             </div>
 
             {/* Messages */}
-            <div className="col-span-2 flex flex-col">
+            <div className="col-span-2 flex flex-col bg-gradient-to-b from-white to-gray-50">
               {initializing && !selectedConversation ? (
                 <div className="flex-1 flex items-center justify-center text-gray-600">
                   <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mb-2"></div>
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
                     <p>Inicijalizujem konverzaciju...</p>
                   </div>
                 </div>
               ) : selectedConversation ? (
                 <>
-                  <div className="p-4 border-b bg-gray-50">
-                    <h2 className="font-semibold">
+                  <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+                    <h2 className="font-semibold text-gray-800">
                       {selectedConversation.otherParticipant.name}
                     </h2>
                   </div>
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {messages.map((msg: any, idx) => (
                       <div
                         key={idx}
@@ -272,10 +278,10 @@ function MessagesContent() {
                         }`}
                       >
                         <div
-                          className={`max-w-xs px-4 py-2 rounded-lg ${
+                          className={`max-w-xs px-4 py-2 rounded-xl shadow-sm ${
                             msg.senderId === (session?.user as any)?.id
-                              ? 'bg-primary-600 text-white'
-                              : 'bg-gray-200 text-gray-900'
+                              ? 'bg-blue-600 text-white rounded-br-none'
+                              : 'bg-gray-200 text-gray-900 rounded-bl-none'
                           }`}
                         >
                           {msg.content}
@@ -283,18 +289,18 @@ function MessagesContent() {
                       </div>
                     ))}
                   </div>
-                  <form onSubmit={sendMessage} className="p-4 border-t">
+                  <form onSubmit={sendMessage} className="p-4 border-t border-gray-200 bg-white">
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Napišite poruku..."
-                        className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                       />
                       <button
                         type="submit"
-                        className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700"
+                        className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 font-semibold transition-all shadow-md hover:shadow-lg active:shadow-sm"
                       >
                         Pošalji
                       </button>
@@ -303,7 +309,10 @@ function MessagesContent() {
                 </>
               ) : (
                 <div className="flex-1 flex items-center justify-center text-gray-600">
-                  Izaberite konverzaciju
+                  <div className="text-center">
+                    <p className="text-lg">Izaberite konverzaciju</p>
+                    <p className="text-sm text-gray-500 mt-2">ili pokrenite novu</p>
+                  </div>
                 </div>
               )}
             </div>

@@ -114,7 +114,7 @@ export default function CartPage() {
                   {(session?.user as any)?.id !== group.seller.id ? (
                     <Link
                       href={`/messages?sellerId=${group.seller.id}`}
-                      className="bg-primary-600 text-white px-6 py-2 rounded hover:bg-primary-700 inline-block"
+                      className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 inline-block font-semibold transition-colors"
                     >
                       Kontaktiraj prodavca
                     </Link>

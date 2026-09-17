@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import ProductCard from './components/ProductCard'
+import MessageBadge from './components/MessageBadge'
+import Header from './components/Header'
 
 export default function Home() {
   const { data: session } = useSession()
@@ -54,66 +56,30 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <Link href="/" className="flex items-center">
-              <Image
-                src="/logo.svg"
-                alt="Berza Autića - Mali modeli, velika strast"
-                width={150}
-                height={50}
-              />
-            </Link>
-            <nav className="flex items-center space-x-4">
-              {session ? (
-                <>
-                  <Link href="/seller/dashboard" className="text-gray-700 hover:text-gray-900">
-                    Moji proizvodi
-                  </Link>
+      <Header />
 
-                  <Link href="/messages" className="text-gray-700 hover:text-gray-900">
-                    Poruke
-                  </Link>
-                  <Link href="/profile" className="text-gray-700 hover:text-gray-900">
-                    Profil
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link href="/auth/login" className="text-gray-700 hover:text-gray-900">
-                    Prijava
-                  </Link>
-                  <Link href="/auth/register" className="text-gray-700 hover:text-gray-900 px-4 py-2 rounded hover:bg-primary-700">
-                    Registracija
-                  </Link>                </>
-              )}
-            </nav>
-          </div>
-
-          {/* Search Bar */}
-          <div className="mt-4 flex gap-4">
-            <input
-              type="text"
-              placeholder="Pretraži proizvode..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="">Sve kategorije</option>
-              {categories.map((cat: any) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        {/* Search Bar */}
+        <div className="flex gap-3">
+          <input
+            type="text"
+            placeholder="Pretraži proizvode..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500 transition-all shadow-sm"
+          />
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 transition-all shadow-sm font-medium"
+          >
+            <option value="">Sve kategorije</option>
+            {categories.map((cat: any) => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            ))}
+          </select>
         </div>
-      </header>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Promoted Products */}

@@ -141,7 +141,7 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
                       {product.seller.name}
                     </span>
                     <span 
-                      className="text-xs text-gray-500 hover:underline hover:text-primary-600"
+                      className="text-xs text-blue-900 hover:underline hover:text-blue-700 font-semibold"
                     >
                       Svi oglasi
                     </span>

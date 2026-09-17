@@ -55,7 +55,15 @@ export async function GET() {
       },
     })
 
-     const conversationsWithMessages = userConversations.map((conv: typeof userConversations[0]) => ({
+    // Prebrojaj nepročitane poruke
+    const unreadCount = await prisma.message.count({
+      where: {
+        receiverId: memberId,
+        isRead: false,
+      },
+    })
+
+    const conversationsWithMessages = userConversations.map((conv: typeof userConversations[0]) => ({
       ...serializeConversation(conv),
       lastMessage: conv.messages[0]
         ? { ...conv.messages[0], _id: conv.messages[0].id }
@@ -64,6 +72,7 @@ export async function GET() {
 
     return NextResponse.json({
       conversations: conversationsWithMessages,
+      unreadCount, // Dodaj nepročitane poruke
     })
   } catch (error) {
     console.error('Error fetching conversations:', error)

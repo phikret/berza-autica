@@ -74,7 +74,7 @@ export async function sendVerificationEmail(
     })
 
     console.log('✅ Email sent successfully!')
-    console.log('📨 Response ID:', response.id)
+    console.log('📨 Response ID:', response)
     console.log('='.repeat(80) + '\n')
 
     return { success: true }

@@ -209,7 +209,7 @@ export default function ProductDetail() {
                     <p className="font-medium text-gray-900">{product.seller.name}</p>
                     <button
                       onClick={() => window.location.href = `/seller/${product.seller.id}`}
-                      className="text-xs text-gray-500 hover:underline hover:text-primary-600 cursor-pointer"
+                      className="text-xs text-blue-900 hover:underline hover:text-blue-700 cursor-pointer font-semibold"
                     >
                       Svi oglasi
                     </button>
@@ -228,7 +228,7 @@ export default function ProductDetail() {
                 {session && (session.user as any)?.id !== product.sellerId ? (
                   <Link
                     href={`/messages?sellerId=${product.sellerId}&productId=${product.id}`}
-                    className="block w-full bg-gray-100 text-gray-900 py-3 px-6 rounded-lg hover:bg-gray-200 transition font-semibold text-base text-center"
+                    className="block w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition font-semibold text-base text-center"
                   >
                     Kontaktiraj prodavca
                   </Link>
