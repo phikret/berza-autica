@@ -75,7 +75,7 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
       <div className={`bg-white rounded-xl overflow-hidden shadow hover:shadow-xl transition-all duration-300 ${promoted ? 'ring-2 ring-yellow-400' : ''}`}>
         {/* Image Section - Full width */}
         {product.images && product.images[0] && (
-          <div className="relative h-64 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden group">
+          <div className="relative h-25 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden group">
             
             <Image
               src={product.images[0]}
@@ -91,13 +91,14 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
         <div className="p-4 space-y-3">
             
           {/* Badge and Category */}
-          <div className="flex items-start justify-between gap-3">
-            {promoted && (
-            <span className="bg-yellow-100 text-yellow-700 text-xs font-semibold px-3 py-1 rounded-full">
+           {promoted && (
+            <div className="inline-block bg-yellow-100 text-yellow-700 text-xs font-semibold px-3 py-1 rounded-full">
                     Istaknuto
-            </span>)}
+            </div>)}
+          <div className="flex items-start gap-3">
+           
              <div>
-                <h3 className="font-bold text-lg text-gray-900 leading-snug line-clamp-2">
+                <h3 className="font-bold text-lg text-gray-900 leading-snug line-clamp-2 truncate">
                   {product.name}
                 </h3>
              </div>

@@ -147,7 +147,7 @@ export default function SellerPage() {
               <p className="text-gray-600 mb-6">
                 Ukupno proizvoda: {pagination?.total}
               </p>
-              <div className="space-y-4">
+              <div className="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product} variant="list" />
                 ))}
@@ -184,7 +184,7 @@ export default function SellerPage() {
                   disabled={currentPage === pagination.totalPages}
                   className="px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
                 >
-                  Sljedeća
+                  Sledeća
                 </button>
               </div>
             )}
