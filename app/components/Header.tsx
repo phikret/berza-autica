@@ -9,7 +9,7 @@ export default function Header() {
   const { data: session, status } = useSession()
 
   return (
-    <header className="bg-gradient-to-r from-blue-50 to-blue-10 border-b border-blue-200">
+    <header className="bg-gradient-to-r from-blue-1 to-blue-50 border-b border-blue-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center">
