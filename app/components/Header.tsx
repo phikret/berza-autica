@@ -37,6 +37,13 @@ export default function Header() {
                   Poruke
                   <MessageBadge />
                 </Link>
+                
+                {(session.user as any)?.role === 'admin' && (
+                  <Link href="/admin/members" className="text-red-600 hover:text-red-900 font-semibold transition-colors">
+                    Admin Panel
+                  </Link>
+                )}
+                
                 <Link href="/profile" className="text-blue-900 hover:text-blue-900 font-semibold transition-colors">
                   Profil
                 </Link>

@@ -42,6 +42,27 @@ export async function POST(
       )
     }
 
+    // Check if promotion has expired
+    let hasExpiredPromotion = false
+    if (product.isPromoted && product.promotedAt) {
+      const promotionEndDate = new Date(product.promotedAt)
+      promotionEndDate.setDate(promotionEndDate.getDate() + 7)
+      
+      if (new Date() > promotionEndDate) {
+        hasExpiredPromotion = true
+        // Remove expired promotion
+        await prisma.product.update({
+          where: { id: productId },
+          data: {
+            isPromoted: false,
+            promotedAt: null,
+          },
+        })
+        product.isPromoted = false
+        product.promotedAt = null
+      }
+    }
+
     if (product.isPromoted) {
       return NextResponse.json(
         { error: 'Proizvod je već promovisan' },

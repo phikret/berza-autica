@@ -14,6 +14,7 @@ export default function NewProduct() {
     description: '',
     price: '',
     categoryId: '',
+    scale: '1:43',
   })
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
@@ -60,6 +61,7 @@ export default function NewProduct() {
       body.append('description', formData.description)
       body.append('price', formData.price)
       body.append('categoryId', formData.categoryId)
+      body.append('scale', formData.scale)
 
       selectedFiles.slice(0, 5).forEach((file) => {
         body.append('images', file)
@@ -166,6 +168,29 @@ export default function NewProduct() {
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Razmera (Scale) *
+              </label>
+              <select
+                required
+                value={formData.scale}
+                onChange={(e) => setFormData({ ...formData, scale: e.target.value })}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="1:18">1:18</option>
+                <option value="1:24">1:24</option>
+                <option value="1:32">1:32</option>
+                <option value="1:43">1:43</option>
+                <option value="1:64">1:64</option>
+                <option value="1:87">1:87</option>
+                <option value="1:100">1:100</option>
+                <option value="1:120">1:120</option>
+                <option value="1:160">1:160</option>
+                <option value="Ostalo">Ostalo</option>
               </select>
             </div>
 

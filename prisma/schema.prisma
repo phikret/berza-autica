@@ -61,6 +61,7 @@ model Product {
   slug        String     @unique
   description String
   price       Int
+  scale       String?    @default("1:64")
   images      String[]
   isActive    Boolean    @default(true)
   isPromoted  Boolean    @default(false)

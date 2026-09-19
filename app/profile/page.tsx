@@ -10,7 +10,6 @@ export default function ProfilePage() {
   const router = useRouter()
   const [balance, setBalance] = useState(0)
   const [history, setHistory] = useState<any[]>([])
-  const [topupAmount, setTopupAmount] = useState('')
   const [loading, setLoading] = useState(true)
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [passwordForm, setPasswordForm] = useState({
@@ -41,27 +40,6 @@ export default function ProfilePage() {
       console.error('Error fetching balance:', error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleTopup = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const amount = parseInt(topupAmount)
-    if (amount <= 0) return
-
-    try {
-      const response = await fetch('/api/balance/topup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount }),
-      })
-
-      if (response.ok) {
-        setTopupAmount('')
-        await fetchBalance()
-      }
-    } catch (error) {
-      console.error('Error topping up:', error)
     }
   }
 
@@ -150,25 +128,12 @@ export default function ProfilePage() {
           {/* Balance */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-bold mb-4">Balans tokena</h2>
-            <div className="text-4xl font-bold text-primary-600 mb-4">
+            <div className="text-4xl font-bold text-primary-600">
               {balance} tokena
             </div>
-            <form onSubmit={handleTopup} className="space-y-3">
-              <input
-                type="number"
-                min="1"
-                placeholder="Iznos"
-                value={topupAmount}
-                onChange={(e) => setTopupAmount(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-              <button
-                type="submit"
-                className="w-full bg-primary-600 text-white py-2 rounded hover:bg-primary-700"
-              >
-                Dodaj tokene
-              </button>
-            </form>
+            <p className="text-sm text-gray-600 mt-2">
+              Za dopunu tokena kontaktiraj administratora
+            </p>
           </div>
         </div>
 

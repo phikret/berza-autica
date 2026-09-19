@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { createProductWithFee } from '@/lib/services/products'
+import { createProductWithFee, removeExpiredPromotions } from '@/lib/services/products'
 import { uploadImage } from '@/lib/cloudinary'
 import { z } from 'zod'
 
@@ -11,6 +11,7 @@ const createProductSchema = z.object({
   description: z.string().min(10, 'Opis mora imati najmanje 10 karaktera'),
   price: z.number().int().positive('Cena mora biti pozitivan broj'),
   categoryId: z.string(),
+  scale: z.string().optional().default('1:64'),
   images: z.array(z.string()).min(1, 'Potrebna je najmanje 1 slika').max(5, 'Maksimalno 5 slika'),
 })
 
@@ -23,6 +24,7 @@ async function parseProductRequest(request: NextRequest) {
     const description = formData.get('description')?.toString() || ''
     const priceString = formData.get('price')?.toString() || ''
     const categoryId = formData.get('categoryId')?.toString() || ''
+    const scale = formData.get('scale')?.toString() || '1:64'
 
     const imageItems = formData.getAll('images')
     const images: string[] = []
@@ -44,6 +46,7 @@ async function parseProductRequest(request: NextRequest) {
       description,
       price: parseInt(priceString, 10),
       categoryId,
+      scale,
       images,
     }
   }
@@ -89,7 +92,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get promoted products separately
-    const promotedProducts = await prisma.product.findMany({
+    let promotedProducts = await prisma.product.findMany({
       where: {
         ...where,
         isPromoted: true,
@@ -107,25 +110,42 @@ export async function GET(request: NextRequest) {
       orderBy: { promotedAt: 'desc' },
     })
 
+    // Remove expired promotions
+    if (promotedProducts.length > 0) {
+      try {
+        await removeExpiredPromotions(promotedProducts)
+      } catch (err) {
+        console.error('Error removing expired promotions from promoted products:', err)
+      }
+    }
+
     // Get regular products
-    const [products, total] = await Promise.all([
-      prisma.product.findMany({
-        where,
-        include: {
-          category: true,
-          seller: {
-            select: {
-              id: true,
-              name: true,
-            },
+    let products = await prisma.product.findMany({
+      where,
+      include: {
+        category: true,
+        seller: {
+          select: {
+            id: true,
+            name: true,
           },
         },
-        skip,
-        take: limit,
-        orderBy,
-      }),
-      prisma.product.count({ where }),
-    ])
+      },
+      skip,
+      take: limit,
+      orderBy,
+    })
+
+    // Remove expired promotions from regular products
+    if (products.length > 0) {
+      try {
+        await removeExpiredPromotions(products)
+      } catch (err) {
+        console.error('Error removing expired promotions from regular products:', err)
+      }
+    }
+
+    const total = await prisma.product.count({ where })
 
     return NextResponse.json({
       products,

@@ -24,7 +24,7 @@ export default function SellerDashboard() {
   const fetchData = async () => {
     try {
       const [productsRes, balanceRes] = await Promise.all([
-        fetch('/api/products?myProducts=true'),
+        fetch('/api/seller/products'),
         fetch('/api/balance'),
       ])
 
@@ -190,7 +190,7 @@ export default function SellerDashboard() {
                         </span>
                         {product.isPromoted && (
                           <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                            Promovisan
+                            Promovisan {product.promotionDaysRemaining !== null && product.promotionDaysRemaining > 0 ? `(${product.promotionDaysRemaining}d)` : '(isteklo)'}
                           </span>
                         )}
                       </div>
@@ -214,6 +214,14 @@ export default function SellerDashboard() {
                           className="text-yellow-600 hover:text-yellow-900"
                         >
                           Promoviši
+                        </button>
+                      )}
+                      {product.isPromoted && product.promotionDaysRemaining === 0 && (
+                        <button
+                          onClick={() => promoteProduct(product.id)}
+                          className="text-yellow-600 hover:text-yellow-900"
+                        >
+                          Promoviši ponovo
                         </button>
                       )}
                       <button

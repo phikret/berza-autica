@@ -17,7 +17,7 @@ export default function MessageBadge() {
     const interval = setInterval(fetchUnreadCount, 30000)
 
     return () => clearInterval(interval)
-  }, [session?.user])
+  }, [session?.user?.email])
 
   const fetchUnreadCount = async () => {
     try {

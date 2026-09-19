@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { uploadImage, getPublicIdFromUrl, deleteImage } from '@/lib/cloudinary'
+import { removeExpiredPromotions } from '@/lib/services/products'
 import { z } from 'zod'
 
 const updateProductSchema = z.object({
@@ -66,7 +67,7 @@ export async function GET(
 ) {
   try {
     const { productId } = await params
-    const product = await prisma.product.findUnique({
+    let product = await prisma.product.findUnique({
       where: { id: productId },
       include: {
         category: true,
@@ -85,6 +86,25 @@ export async function GET(
         { error: 'Product not found' },
         { status: 404 }
       )
+    }
+
+    // Check if promotion has expired
+    if (product.isPromoted && product.promotedAt) {
+      const promotionEndDate = new Date(product.promotedAt)
+      promotionEndDate.setDate(promotionEndDate.getDate() + 7)
+      
+      if (new Date() > promotionEndDate) {
+        // Remove expired promotion
+        await prisma.product.update({
+          where: { id: productId },
+          data: {
+            isPromoted: false,
+            promotedAt: null,
+          },
+        })
+        product.isPromoted = false
+        product.promotedAt = null
+      }
     }
 
     return NextResponse.json({ product })

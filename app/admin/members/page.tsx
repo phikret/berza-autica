@@ -10,6 +10,11 @@ export default function AdminMembers() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [showTokenModal, setShowTokenModal] = useState(false)
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null)
+  const [tokenAmount, setTokenAmount] = useState('')
+  const [tokenReason, setTokenReason] = useState('')
+  const [tokenLoading, setTokenLoading] = useState(false)
 
   useEffect(() => {
     fetchMembers()
@@ -34,17 +39,62 @@ export default function AdminMembers() {
 
   const toggleMemberStatus = async (memberId: string, currentStatus: boolean) => {
     try {
-      const response = await fetch(`/api/admin/members/${memberId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: !currentStatus }),
+      const response = await fetch(`/api/admin/users/${memberId}/deactivate`, {
+        method: currentStatus ? 'POST' : 'PUT',
       })
 
       if (response.ok) {
         await fetchMembers()
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Greška pri promeni statusa')
       }
     } catch (error) {
       console.error('Error updating member:', error)
+      alert('Greška pri promeni statusa')
+    }
+  }
+
+  const openTokenModal = (memberId: string) => {
+    setSelectedMemberId(memberId)
+    setTokenAmount('')
+    setTokenReason('')
+    setShowTokenModal(true)
+  }
+
+  const handleAddTokens = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedMemberId || !tokenAmount || !tokenReason) {
+      alert('Popunite sva polja')
+      return
+    }
+
+    setTokenLoading(true)
+    try {
+      const response = await fetch('/api/admin/tokens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: selectedMemberId,
+          amount: parseInt(tokenAmount),
+          reason: tokenReason,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        alert(data.message)
+        setShowTokenModal(false)
+        await fetchMembers()
+      } else {
+        alert(data.error || 'Greška pri dodavanju tokena')
+      }
+    } catch (error) {
+      console.error('Error adding tokens:', error)
+      alert('Greška pri dodavanju tokena')
+    } finally {
+      setTokenLoading(false)
     }
   }
 
@@ -115,7 +165,13 @@ export default function AdminMembers() {
                       {member.isActive ? 'Aktivan' : 'Neaktivan'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                    <button
+                      onClick={() => openTokenModal(member.id)}
+                      className="text-blue-600 hover:text-blue-900"
+                    >
+                      Dodaj tokene
+                    </button>
                     <button
                       onClick={() => toggleMemberStatus(member.id, member.isActive)}
                       className={`${
@@ -156,6 +212,60 @@ export default function AdminMembers() {
           </div>
         )}
       </div>
+
+      {/* Token Modal */}
+      {showTokenModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Dodaj tokene korisniku</h2>
+            <form onSubmit={handleAddTokens}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Iznos (broj tokena)
+                </label>
+                <input
+                  type="number"
+                  value={tokenAmount}
+                  onChange={(e) => setTokenAmount(e.target.value)}
+                  placeholder="npr. 100"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="1"
+                  required
+                />
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Razlog
+                </label>
+                <input
+                  type="text"
+                  value={tokenReason}
+                  onChange={(e) => setTokenReason(e.target.value)}
+                  placeholder="npr. Nadoknada za grešku"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowTokenModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  Odustani
+                </button>
+                <button
+                  type="submit"
+                  disabled={tokenLoading}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {tokenLoading ? 'Učitavanje...' : 'Dodaj'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -144,3 +144,28 @@ export async function getSellerListingStats(sellerId: string) {
 // Re-export balance functions for convenience
 export { deductTokens, hasInsufficientBalance } from './balance'
 
+// Remove expired promotions from products
+export async function removeExpiredPromotions(products: any[]) {
+  const now = new Date()
+  
+  for (const product of products) {
+    if (product.isPromoted && product.promotedAt) {
+      const promotionEndDate = new Date(product.promotedAt)
+      promotionEndDate.setDate(promotionEndDate.getDate() + 7)
+      
+      if (now > promotionEndDate) {
+        // Remove expired promotion
+        await prisma.product.update({
+          where: { id: product.id },
+          data: {
+            isPromoted: false,
+            promotedAt: null,
+          },
+        })
+        product.isPromoted = false
+        product.promotedAt = null
+      }
+    }
+  }
+}
+
