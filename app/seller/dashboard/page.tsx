@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function SellerDashboard() {
   const { data: session } = useSession()
@@ -175,7 +176,18 @@ export default function SellerDashboard() {
                 {products.map((product) => (
                   <tr key={product.id}>
                     <td className="px-6 py-4">
-                      <div className="font-medium">{product.name}</div>
+                      <div className="relative h-20 bg-gradient-to-br from-gray-200 to-gray-100 overflow-hidden group">
+                          <Image
+                            src={product.images[0]}
+                            alt={product.name}
+                            fill
+                            className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                            style={{"scale":"95%"}}
+                          />
+                      </div>
+                      </td>
+                      <td className="px-6 py-4">
+                      <div className="font-medium">{product.scale} {product.name}</div>
                       <div className="text-sm text-gray-500">{product.category.name}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

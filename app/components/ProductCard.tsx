@@ -42,14 +42,12 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
           {/* Content */}
           <div className="flex-1 flex flex-col justify-between py-2">
             {/* Title and Description */}
-            <div>
               <h3 className="font-bold text-base text-gray-900 line-clamp-1">
                 {product.name}
               </h3>
               <p className="text-sm text-gray-500 line-clamp-1 mt-1">
                 {product.description}
               </p>
-            </div>
             
             {/* Price and Seller */}
             <div className="flex items-center justify-between mt-3">
@@ -95,11 +93,11 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
             <div className="inline-block bg-yellow-100 text-yellow-700 text-xs font-semibold px-3 py-1 rounded-full">
                     Istaknuto
             </div>)}
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-3 mb-3">
            
              <div>
-                <h3 className="font-bold text-lg text-gray-900 leading-snug line-clamp-2 truncate">
-                  {product.name}
+                <h3 className="font-bold text-base text-gray-900 leading-snug line-clamp-2 truncate">
+                  {product.scale} {product.name}
                 </h3>
              </div>
           </div>
@@ -108,7 +106,7 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
           <div className="flex gap-4">
 
             <div id="left" className="flex-1">
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 mb-0">
                   {promoted && (
                     <div className="inline-flex items-center gap-2 w-fit">
                       {/* Description */}
@@ -124,7 +122,7 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
               <div className="flex flex-col items-end justify-between pt-2">
                 <div className="flex flex-col gap-2">
                   <p className="text-m text-gray-400  tracking-wide font-medium">Cena &nbsp; 
-                      <span className="text-xl font-bold text-black">{product.price} RSD </span>
+                      <span className="text-sm font-bold text-black">{product.price} RSD </span>
                   </p>
                 </div>
              </div>
@@ -138,7 +136,7 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
                     className="flex items-center gap-2 hover:text-primary-600 cursor-pointer justify-end"
                     onClick={handleSellerClick}
                   >
-                    <span className="text-sm text-gray-700 font-medium">
+                    <span className="text-xs text-gray-700 font-medium">
                       {product.seller.name}
                     </span>
                     <span 

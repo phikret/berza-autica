@@ -11,6 +11,7 @@ const updateProductSchema = z.object({
   description: z.string().min(10).optional(),
   price: z.number().int().positive().optional(),
   categoryId: z.string().optional(),
+  scale: z.string().optional(),
   images: z.array(z.string()).min(1).max(5).optional(),
   isActive: z.boolean().optional(),
 })
@@ -24,6 +25,7 @@ async function parseUpdateProductRequest(request: NextRequest) {
     const description = formData.get('description')?.toString()
     const priceString = formData.get('price')?.toString()
     const categoryId = formData.get('categoryId')?.toString()
+    const scale = formData.get('scale')?.toString()
     const existingImagesStr = formData.get('existingImages')?.toString() || '[]'
     const isActiveStr = formData.get('isActive')?.toString()
 
@@ -51,6 +53,7 @@ async function parseUpdateProductRequest(request: NextRequest) {
     if (description) result.description = description
     if (priceString) result.price = parseInt(priceString, 10)
     if (categoryId) result.categoryId = categoryId
+    if (scale) result.scale = scale
     if (isActiveStr !== undefined && isActiveStr !== '') result.isActive = isActiveStr === 'true'
 
     return result
@@ -156,7 +159,7 @@ export async function PATCH(
 
     const body = await parseUpdateProductRequest(request)
     const validatedData = updateProductSchema.parse(body)
-
+console.log("validatedDate", validatedData)
     // If images were updated, delete old images that are no longer used
     if (validatedData.images && validatedData.images.length > 0) {
       const oldImages = (existingProduct.images as string[]) || []

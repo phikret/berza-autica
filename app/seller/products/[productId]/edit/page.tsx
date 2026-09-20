@@ -15,6 +15,7 @@ export default function EditProduct({ params }: { params: Promise<{ productId: s
     description: '',
     price: '',
     categoryId: '',
+    scale: ''
   })
   const [existingImages, setExistingImages] = useState<string[]>([])
   const [imagesToRemove, setImagesToRemove] = useState<string[]>([])
@@ -58,6 +59,7 @@ export default function EditProduct({ params }: { params: Promise<{ productId: s
         fetch('/api/categories'),
       ])
 
+
       if (productRes.ok) {
         const data = await productRes.json()
         const product = data.product
@@ -66,6 +68,7 @@ export default function EditProduct({ params }: { params: Promise<{ productId: s
           description: product.description,
           price: product.price.toString(),
           categoryId: product.categoryId,
+          scale: product.scale
         })
         setExistingImages(product.images || [])
       }
@@ -93,6 +96,7 @@ export default function EditProduct({ params }: { params: Promise<{ productId: s
       body.append('description', formData.description)
       body.append('price', formData.price)
       body.append('categoryId', formData.categoryId)
+      body.append('scale', formData.scale)
 
       // Add new images
       selectedFiles.forEach((file) => {
@@ -218,6 +222,29 @@ export default function EditProduct({ params }: { params: Promise<{ productId: s
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Razmera (Scale) *
+              </label>
+              <select
+                required
+                value={formData.scale}
+                onChange={(e) => setFormData({ ...formData, scale: e.target.value })}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="1:18">1:18</option>
+                <option value="1:24">1:24</option>
+                <option value="1:32">1:32</option>
+                <option value="1:43">1:43</option>
+                <option value="1:64">1:64</option>
+                <option value="1:87">1:87</option>
+                <option value="1:100">1:100</option>
+                <option value="1:120">1:120</option>
+                <option value="1:160">1:160</option>
+                <option value="Ostalo">Ostalo</option>
               </select>
             </div>
 

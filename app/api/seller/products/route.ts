@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
         images: product.images,
         slug: product.slug,
         category: product.category,
+        scale: product.scale,
         seller: product.seller,
         promoted: product.isPromoted,
         isActive: product.isActive,
