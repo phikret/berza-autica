@@ -14,6 +14,7 @@ export default function SellerPage() {
   const { data: session } = useSession()
   const sellerId = params.id as string
   const currentPage = parseInt(searchParams.get('page') || '1')
+  const initialPageSize = parseInt(searchParams.get('pageSize') || '12')
 
   const [products, setProducts] = useState<any[]>([])
   const [pagination, setPagination] = useState<any>(null)
@@ -24,17 +25,18 @@ export default function SellerPage() {
   const [categories, setCategories] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
+  const [pageSize, setPageSize] = useState(initialPageSize)
 
   useEffect(() => {
     fetchSellerProducts()
     fetchCategories()
-  }, [sellerId, currentPage])
+  }, [sellerId, currentPage, pageSize])
 
   const fetchSellerProducts = async () => {
     try {
       setLoading(true)
       const response = await fetch(
-        `/api/products/seller/${sellerId}?page=${currentPage}&pageSize=12`
+        `/api/products/seller/${sellerId}?page=${currentPage}&pageSize=${pageSize}`
       )
       const data = await response.json()
 
@@ -67,6 +69,7 @@ export default function SellerPage() {
   const goToPage = (page: number) => {
     const url = new URL(window.location.href)
     url.searchParams.set('page', page.toString())
+    url.searchParams.set('pageSize', pageSize.toString())
     window.history.pushState({}, '', url)
     fetchSellerProducts()
   }
@@ -144,9 +147,23 @@ export default function SellerPage() {
           <>
             {/* Products List */}
             <div className="mb-8">
-              <p className="text-gray-600 mb-6">
-                Ukupno proizvoda: {pagination?.total}
-              </p>
+              <div className="flex justify-between items-center mb-6">
+                <p className="text-gray-600">
+                  Ukupno proizvoda: {pagination?.total}
+                </p>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(parseInt(e.target.value))
+                    goToPage(1)
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white transition-colors"
+                >
+                  <option value="10">10 po stranici</option>
+                  <option value="25">25 po stranici</option>
+                  <option value="50">50 po stranici</option>
+                </select>
+              </div>
               <div className="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product} variant="list" />

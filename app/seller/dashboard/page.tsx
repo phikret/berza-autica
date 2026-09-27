@@ -13,6 +13,9 @@ export default function SellerDashboard() {
   const [balance, setBalance] = useState(0)
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
 
   useEffect(() => {
     if (!session) {
@@ -20,18 +23,19 @@ export default function SellerDashboard() {
       return
     }
     fetchData()
-  }, [session])
+  }, [session, page, pageSize])
 
   const fetchData = async () => {
     try {
       const [productsRes, balanceRes] = await Promise.all([
-        fetch('/api/seller/products'),
+        fetch(`/api/seller/products?page=${page}&pageSize=${pageSize}`),
         fetch('/api/balance'),
       ])
 
       if (productsRes.ok) {
         const data = await productsRes.json()
         setProducts(data.products || [])
+        setTotalPages(data.pagination?.totalPages || 1)
       }
 
       if (balanceRes.ok) {
@@ -111,6 +115,11 @@ export default function SellerDashboard() {
     }
   }
 
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Učitavanje...</div>
   }
@@ -162,95 +171,149 @@ export default function SellerDashboard() {
             </Link>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Proizvod</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cena</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Akcije</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {products.map((product) => (
-                  <tr key={product.id}>
-                    <td className="px-6 py-4">
-                      <div className="relative h-20 bg-gradient-to-br from-gray-200 to-gray-100 overflow-hidden group">
-                          <Image
-                            src={product.images[0]}
-                            alt={product.name}
-                            fill
-                            className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
-                            style={{"scale":"95%"}}
-                          />
-                      </div>
-                      </td>
-                      <td className="px-6 py-4">
-                      <div className="font-medium">{product.scale} {product.name}</div>
-                      <div className="text-sm text-gray-500">{product.category.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {product.price} RSD
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-1">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          product.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {product.isActive ? 'Aktivan' : 'Neaktivan'}
-                        </span>
-                        {product.isPromoted && (
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                            Promovisan {product.promotionDaysRemaining !== null && product.promotionDaysRemaining > 0 ? `(${product.promotionDaysRemaining}d)` : '(isteklo)'}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                      <Link href={`/products/${product.slug}`} className="text-primary-600 hover:text-primary-900">
-                        Pregled
-                      </Link>
-                      <Link href={`/seller/products/${product.id}/edit`} className="text-blue-600 hover:text-blue-900">
-                        Uredi
-                      </Link>
-                      <button
-                        onClick={() => toggleProductStatus(product.id, product.isActive)}
-                        className={`${product.isActive ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}`}
-                      >
-                        {product.isActive ? 'Deaktiviraj' : 'Aktiviraj'}
-                      </button>
-                      {!product.isPromoted && (
-                        <button
-                          onClick={() => promoteProduct(product.id)}
-                          className="text-yellow-600 hover:text-yellow-900"
-                        >
-                          Promoviši
-                        </button>
-                      )}
-                      {product.isPromoted && product.promotionDaysRemaining === 0 && (
-                        <button
-                          onClick={() => promoteProduct(product.id)}
-                          className="text-yellow-600 hover:text-yellow-900"
-                        >
-                          Promoviši ponovo
-                        </button>
-                      )}
-                      <button
-                        onClick={() => deleteProduct(product.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Obriši
-                      </button>
-                    </td>
+          <>
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Proizvod</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cena</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Akcije</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {products.map((product) => (
+                    <tr key={product.id}>
+                      <td className="px-1 py-0">
+                        <div className="relative h-20 bg-gradient-to-br from-gray-200 to-gray-100 overflow-hidden group">
+                            <Image
+                              src={product.images[0]}
+                              alt={product.name}
+                              fill
+                              className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                              style={{"scale":"95%"}}
+                            />
+                        </div>
+                        </td>
+                        <td className="px-2 py-1">
+                        <div className="font-medium">{product.scale} {product.name}</div>
+                        <div className="text-sm text-gray-500">{product.category.name}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {product.price} RSD
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col gap-1">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            product.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {product.isActive ? 'Aktivan' : 'Neaktivan'}
+                          </span>
+                          {product.isPromoted && (
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                              Promovisan {product.promotionDaysRemaining !== null && product.promotionDaysRemaining > 0 ? `(${product.promotionDaysRemaining}d)` : '(isteklo)'}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                        <Link href={`/products/${product.slug}`} className="text-primary-600 hover:text-primary-900">
+                          Pregled
+                        </Link>
+                        <Link href={`/seller/products/${product.id}/edit`} className="text-blue-600 hover:text-blue-900">
+                          Uredi
+                        </Link>
+                        <button
+                          onClick={() => toggleProductStatus(product.id, product.isActive)}
+                          className={`${product.isActive ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}`}
+                        >
+                          {product.isActive ? 'Deaktiviraj' : 'Aktiviraj'}
+                        </button>
+                        {!product.isPromoted && (
+                          <button
+                            onClick={() => promoteProduct(product.id)}
+                            className="text-yellow-600 hover:text-yellow-900"
+                          >
+                            Promoviši
+                          </button>
+                        )}
+                        {product.isPromoted && product.promotionDaysRemaining === 0 && (
+                          <button
+                            onClick={() => promoteProduct(product.id)}
+                            className="text-yellow-600 hover:text-yellow-900"
+                          >
+                            Promoviši ponovo
+                          </button>
+                        )}
+                        <button
+                          onClick={() => deleteProduct(product.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Obriši
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="flex justify-between items-center mt-8 mb-6">
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(parseInt(e.target.value))
+                  setPage(1)
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white transition-colors"
+              >
+                <option value="10">10 po stranici</option>
+                <option value="25">25 po stranici</option>
+                <option value="50">50 po stranici</option>
+              </select>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-8">
+                <button
+                  onClick={() => handlePageChange(Math.max(1, page - 1))}
+                  disabled={page === 1}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  ← Prethodna
+                </button>
+
+                <div className="flex gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-2 rounded-lg transition-colors ${
+                        page === pageNum
+                          ? 'bg-blue-600 text-white'
+                          : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
+                  disabled={page === totalPages}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Sledeća →
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
   )
 }
-
