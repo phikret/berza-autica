@@ -16,6 +16,7 @@ export default function SellerDashboard() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [totalProducts, setTotalProducts] = useState(0)
   const [pageSize, setPageSize] = useState(20)
 
   useEffect(() => {
@@ -37,6 +38,7 @@ export default function SellerDashboard() {
         const data = await productsRes.json()
         setProducts(data.products || [])
         setTotalPages(data.pagination?.totalPages || 1)
+        setTotalProducts(data.pagination?.total || 0)
       }
 
       if (balanceRes.ok) {
@@ -180,7 +182,16 @@ export default function SellerDashboard() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Proizvod</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cena</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Akcije</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <div className="flex flex-col items-end gap-1">
+                        <span>Akcije</span>
+                      </div>
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="text-blue-600 font-semibold text-sm">Ukupno: {totalProducts}</span>
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -218,7 +229,7 @@ export default function SellerDashboard() {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2 text-right">
                         <Link href={`/products/${product.slug}`} className="text-primary-600 hover:text-primary-900">
                           Pregled
                         </Link>

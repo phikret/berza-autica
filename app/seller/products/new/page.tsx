@@ -19,6 +19,7 @@ export default function NewProduct() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -54,6 +55,7 @@ export default function NewProduct() {
     e.preventDefault()
     setError('')
     setLoading(true)
+    setIsUploading(true)
 
     try {
       const body = new FormData()
@@ -75,12 +77,15 @@ export default function NewProduct() {
       const data = await response.json()
 
       if (response.ok) {
+        setIsUploading(false)
         router.push('/seller/dashboard')
       } else {
         setError(data.error || 'Greška pri kreiranju proizvoda')
+        setIsUploading(false)
       }
     } catch (err) {
       setError('Greška pri kreiranju proizvoda')
+      setIsUploading(false)
     } finally {
       setLoading(false)
     }
@@ -247,6 +252,22 @@ export default function NewProduct() {
           </form>
         </div>
       </div>
+
+      {/* Upload Overlay with Loader */}
+      {isUploading && (
+        <div className="fixed inset-0 bg-white/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-8 flex flex-col items-center gap-4">
+            <div className="relative h-16 w-16">
+              <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-600 border-r-blue-600 animate-spin"></div>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-semibold text-gray-900">Postavljam slike...</p>
+              <p className="text-sm text-gray-500 mt-2">Molim vas čekajte dok se slike učitavaju</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
