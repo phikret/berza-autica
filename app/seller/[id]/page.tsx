@@ -26,6 +26,30 @@ export default function SellerPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [pageSize, setPageSize] = useState(initialPageSize)
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set())
+
+  // Fetch wishlist once on mount and when session changes
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      if (!session?.user) {
+        setWishlistIds(new Set())
+        return
+      }
+
+      try {
+        const response = await fetch('/api/wishlist')
+        if (response.ok) {
+          const data = await response.json()
+          const ids = new Set<string>((data.items || []).map((item: any) => item.productId))
+          setWishlistIds(ids)
+        }
+      } catch (error) {
+        console.error('Error fetching wishlist:', error)
+      }
+    }
+
+    fetchWishlist()
+  }, [session?.user])
 
   useEffect(() => {
     fetchSellerProducts()
@@ -166,7 +190,23 @@ export default function SellerPage() {
               </div>
               <div className="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} variant="list" />
+                  <ProductCard 
+                    key={product.id} 
+                    product={product} 
+                    variant="list"
+                    isInWishlist={wishlistIds.has(product.id)}
+                    onWishlistChange={(isAdded) => {
+                      if (isAdded) {
+                        setWishlistIds(prev => new Set([...prev, product.id]))
+                      } else {
+                        setWishlistIds(prev => {
+                          const next = new Set(prev)
+                          next.delete(product.id)
+                          return next
+                        })
+                      }
+                    }}
+                  />
                 ))}
               </div>
             </div>

@@ -38,6 +38,7 @@ model Member {
   notifications         Notification[]
   activityLogs          ActivityLog[]
   emailVerifications    EmailVerification[]
+  wishlistItems         WishlistItem[]
 
   @@index([email])
 }
@@ -71,6 +72,7 @@ model Product {
   sellerId    String
   categoryId  String
   cartItems   CartItem[]
+  wishlistItems WishlistItem[]
   category    Category   @relation(fields: [categoryId], references: [id])
   seller      Member     @relation(fields: [sellerId], references: [id])
 
@@ -235,5 +237,18 @@ model EmailVerification {
 
   @@index([token])
   @@index([memberId, expiresAt])
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  memberId  String
+  productId String
+  createdAt DateTime @default(now())
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, productId])
+  @@index([memberId])
+  @@index([createdAt])
 }
 

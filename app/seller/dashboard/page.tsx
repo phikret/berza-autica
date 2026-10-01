@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { toast } from 'sonner'
 
 export default function SellerDashboard() {
   const { data: session } = useSession()
@@ -62,15 +63,15 @@ export default function SellerDashboard() {
       })
 
       if (response.ok) {
-        alert(!currentStatus ? 'Proizvod je aktiviran' : 'Proizvod je deaktiviran')
+        toast.success(!currentStatus ? 'Proizvod je aktiviran' : 'Proizvod je deaktiviran')
         await fetchData()
       } else {
         const data = await response.json()
-        alert(data.error || 'Greška pri promeni statusa proizvoda')
+        toast.error(data.error || 'Greška pri promeni statusa proizvoda')
       }
     } catch (error) {
       console.error('Error toggling product status:', error)
-      alert('Greška pri promeni statusa proizvoda')
+      toast.error('Greška pri promeni statusa proizvoda')
     }
   }
 
@@ -105,10 +106,10 @@ export default function SellerDashboard() {
       const data = await response.json()
       
       if (response.ok) {
-        alert(data.message)
+        toast.success(data.message)
         await fetchData()
       } else {
-        alert(data.error)
+        toast.error(data.error)
       }
     } catch (error) {
       console.error('Error promoting product:', error)

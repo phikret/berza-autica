@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 
 export default function AdminMembers() {
   const router = useRouter()
@@ -47,11 +48,11 @@ export default function AdminMembers() {
         await fetchMembers()
       } else {
         const data = await response.json()
-        alert(data.error || 'Greška pri promeni statusa')
+        toast.error(data.error || 'Greška pri promeni statusa')
       }
     } catch (error) {
       console.error('Error updating member:', error)
-      alert('Greška pri promeni statusa')
+      toast.error('Greška pri promeni statusa')
     }
   }
 
@@ -65,7 +66,7 @@ export default function AdminMembers() {
   const handleAddTokens = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedMemberId || !tokenAmount || !tokenReason) {
-      alert('Popunite sva polja')
+      toast.error('Popunite sva polja')
       return
     }
 
@@ -84,15 +85,15 @@ export default function AdminMembers() {
       const data = await response.json()
 
       if (response.ok) {
-        alert(data.message)
+        toast.success(data.message)
         setShowTokenModal(false)
         await fetchMembers()
       } else {
-        alert(data.error || 'Greška pri dodavanju tokena')
+        toast.error(data.error || 'Greška pri dodavanju tokena')
       }
     } catch (error) {
       console.error('Error adding tokens:', error)
-      alert('Greška pri dodavanju tokena')
+      toast.error('Greška pri dodavanju tokena')
     } finally {
       setTokenLoading(false)
     }

@@ -2,19 +2,80 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { useSession } from 'next-auth/react'
+import { toast } from 'sonner'
 
 interface ProductCardProps {
   product: any
   promoted?: boolean
   variant?: 'default' | 'seller' | 'list'
+  isInWishlist?: boolean
+  onWishlistChange?: (isInWishlist: boolean) => void
 }
 
-export default function ProductCard({ product, promoted = false, variant = 'default' }: ProductCardProps) {
+export default function ProductCard({ product, promoted = false, variant = 'default', isInWishlist = false, onWishlistChange }: ProductCardProps) {
+  const { data: session } = useSession()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [inWishlist, setInWishlist] = useState(isInWishlist)
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleSellerClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     window.location.href = `/seller/${product.seller.id}`
+  }
+
+  const handleWishlistClick = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+
+    if (!session?.user) {
+      console.log('No session, redirecting to login')
+      window.location.href = '/auth/login'
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      if (inWishlist) {
+        const response = await fetch(`/api/wishlist/${product.id}`, {
+          method: 'DELETE',
+        })
+        if (response.ok) {
+          setInWishlist(false)
+          onWishlistChange?.(false)
+          toast.success('Proizvod je uklonjen iz liste želja')
+        } else {
+          const error = await response.json()
+          console.error('Error removing from wishlist:', error)
+          toast.error('Greška pri brisanju iz liste želja: ' + error.error)
+        }
+      } else {
+        console.log('Adding to wishlist, product ID:', product.id, 'User:', session.user)
+        const response = await fetch('/api/wishlist', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ productId: product.id }),
+        })
+        
+        const responseData = await response.json()
+        console.log('Response status:', response.status, 'Data:', responseData)
+        
+        if (response.ok) {
+          setInWishlist(true)
+          onWishlistChange?.(true)
+          toast.success('Proizvod je dodan u listu želja!')
+        } else {
+          console.error('Error adding to wishlist:', responseData)
+          toast.error(`Greška: ${responseData.error}`)
+        }
+      }
+    } catch (error) {
+      console.error('Error updating wishlist:', error)
+      toast.error('Greška pri ažuriranju liste želja: ' + String(error))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const images = product.images || []
@@ -81,7 +142,26 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
               fill
               className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
             />
-
+            
+            {/* Wishlist Button */}
+            <button
+              onClick={handleWishlistClick}
+              disabled={isLoading}
+              className={`absolute top-2 right-2 p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 ${
+                inWishlist ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+              } disabled:opacity-50`}
+              title={inWishlist ? 'Ukloni iz liste želja' : 'Dodaj u listu želja'}
+            >
+              <svg
+                className={`w-6 h-6 ${inWishlist ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
+                viewBox="0 0 24 24"
+                fill={inWishlist ? 'currentColor' : 'none'}
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+            </button>
           </div>
         )}
         

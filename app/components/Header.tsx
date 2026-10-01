@@ -9,7 +9,7 @@ export default function Header() {
   const { data: session, status } = useSession()
 
   return (
-    <header className="bg-gradient-to-r from-blue-1 to-blue-50 border-b border-blue-200">
+    <header className="bg-white border-b border-blue-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center">
@@ -31,6 +31,10 @@ export default function Header() {
               <>
                 <Link href="/seller/dashboard" className="text-blue-900 hover:text-blue-900 font-semibold transition-colors">
                   Moji proizvodi
+                </Link>
+
+                <Link href="/wishlist" className="text-blue-900 hover:text-blue-900 font-semibold transition-colors">
+                  Lista želja
                 </Link>
 
                 <Link href="/messages" className="text-blue-900 hover:text-blue-900 font-semibold transition-colors relative">

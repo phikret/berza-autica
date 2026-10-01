@@ -15,21 +15,50 @@ export default function Home() {
   const [categories, setCategories] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
+  const [selectedScale, setSelectedScale] = useState('')
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [pageSize, setPageSize] = useState(20)
+  const [pageSize, setPageSize] = useState(25)
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set())
+
+  // Available scales
+  const scales = ['1:18', '1:24', '1:32', '1:43', '1:64', '1:87', '1:100', '1:144', '1:200']
+
+  // Fetch wishlist once on mount and when session changes
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      if (!session?.user) {
+        setWishlistIds(new Set())
+        return
+      }
+
+      try {
+        const response = await fetch('/api/wishlist')
+        if (response.ok) {
+          const data = await response.json()
+          const ids = new Set<string>((data.items || []).map((item: any) => item.productId))
+          setWishlistIds(ids)
+        }
+      } catch (error) {
+        console.error('Error fetching wishlist:', error)
+      }
+    }
+
+    fetchWishlist()
+  }, [session?.user])
 
   useEffect(() => {
     fetchProducts()
     fetchCategories()
-  }, [searchQuery, selectedCategory, page, pageSize])
+  }, [searchQuery, selectedCategory, selectedScale, page, pageSize])
 
   const fetchProducts = async () => {
     try {
       const params = new URLSearchParams()
       if (searchQuery) params.append('search', searchQuery)
       if (selectedCategory) params.append('categoryId', selectedCategory)
+      if (selectedScale) params.append('scale', selectedScale)
       params.append('page', page.toString())
       params.append('limit', pageSize.toString())
 
@@ -70,7 +99,7 @@ export default function Home() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Search Bar and Filters */}
-        <div className="flex gap-3 items-end">
+        <div className="flex flex-col gap-3">
           <input
             type="text"
             placeholder="Pretraži proizvode..."
@@ -81,31 +110,46 @@ export default function Home() {
             }}
             className="flex-1 px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500 transition-all shadow-sm"
           />
-          <select
-            value={selectedCategory}
-            onChange={(e) => {
-              setSelectedCategory(e.target.value)
-              setPage(1)
-            }}
-            className="px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 transition-all shadow-sm font-medium"
-          >
-            <option value="">Sve kategorije</option>
-            {categories.map((cat: any) => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
-            ))}
-          </select>
-          <select
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(parseInt(e.target.value))
-              setPage(1)
-            }}
-            className="px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 transition-all shadow-sm font-medium"
-          >
-            <option value="10">10 po stranici</option>
-            <option value="25">25 po stranici</option>
-            <option value="50">50 po stranici</option>
-          </select>
+          <div className="flex gap-3 items-center">
+            <select
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value)
+                setPage(1)
+              }}
+              className="px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 transition-all shadow-sm font-medium"
+            >
+              <option value="">Sve kategorije</option>
+              {categories.map((cat: any) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+            <select
+              value={selectedScale}
+              onChange={(e) => {
+                setSelectedScale(e.target.value)
+                setPage(1)
+              }}
+              className="px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 transition-all shadow-sm font-medium"
+            >
+              <option value="">Sve razmere</option>
+              {scales.map((scale) => (
+                <option key={scale} value={scale}>{scale}</option>
+              ))}
+            </select>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(parseInt(e.target.value))
+                setPage(1)
+              }}
+              className="px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 transition-all shadow-sm font-medium"
+            >
+              <option value="10">10 po stranici</option>
+              <option value="25">25 po stranici</option>
+              <option value="50">50 po stranici</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -116,7 +160,23 @@ export default function Home() {
             <h2 className="text-2xl font-bold mb-6">Istaknuti proizvodi</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {promotedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} promoted />
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  promoted 
+                  isInWishlist={wishlistIds.has(product.id)}
+                  onWishlistChange={(isAdded) => {
+                    if (isAdded) {
+                      setWishlistIds(prev => new Set([...prev, product.id]))
+                    } else {
+                      setWishlistIds(prev => {
+                        const next = new Set(prev)
+                        next.delete(product.id)
+                        return next
+                      })
+                    }
+                  }}
+                />
               ))}
             </div>
           </section>
@@ -133,7 +193,22 @@ export default function Home() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard 
+                    key={product.id} 
+                    product={product}
+                    isInWishlist={wishlistIds.has(product.id)}
+                    onWishlistChange={(isAdded) => {
+                      if (isAdded) {
+                        setWishlistIds(prev => new Set([...prev, product.id]))
+                      } else {
+                        setWishlistIds(prev => {
+                          const next = new Set(prev)
+                          next.delete(product.id)
+                          return next
+                        })
+                      }
+                    }}
+                  />
                 ))}
               </div>
 

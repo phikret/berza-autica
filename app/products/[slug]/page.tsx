@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { toast } from 'sonner'
 
 export default function ProductDetail() {
   const params = useParams()
@@ -13,6 +14,7 @@ export default function ProductDetail() {
   const [product, setProduct] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [showTooltip, setShowTooltip] = useState(false)
 
   useEffect(() => {
     if (params.slug) {
@@ -52,14 +54,14 @@ export default function ProductDetail() {
       })
 
       if (response.ok) {
-        alert('Proizvod je dodat u korpu!')
+        toast.success('Proizvod je dodat u korpu!')
       } else {
         const data = await response.json()
-        alert(data.error || 'Greška pri dodavanju u korpu')
+        toast.error(data.error || 'Greška pri dodavanju u korpu')
       }
     } catch (error) {
       console.error('Error adding to cart:', error)
-      alert('Greška pri dodavanju u korpu')
+      toast.error('Greška pri dodavanju u korpu')
     }
   }
 
@@ -169,6 +171,27 @@ export default function ProductDetail() {
                       ))}
                     </div>
                   )}
+
+                  {/* "Kako da kupim?" Link with Tooltip */}
+                  <div className="mt-4 relative inline-block">
+                    <button
+                      onMouseEnter={() => setShowTooltip(true)}
+                      onMouseLeave={() => setShowTooltip(false)}
+                      onClick={() => setShowTooltip(!showTooltip)}
+                      className="text-blue-600 hover:text-blue-700 hover:underline font-medium text-sm transition"
+                    >
+                      Kako da kupim?
+                    </button>
+                    
+                    {showTooltip && (
+                      <div className="absolute bottom-full mb-2 left-0 w-64 bg-gray-900 text-white text-sm rounded-lg p-4 shadow-lg z-20 transform -translate-x-0">
+                        <p className="leading-relaxed">
+                          Možete kontaktirati prodavca putem Berza Autica poruka ako ste registrovani i prijavljeni član. Klikom na link "Svi oglasi" vodi vas na stranu gde možete da vidite broj prodavca.
+                        </p>
+                        <div className="absolute top-full left-4 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div className="h-96 bg-gray-200 rounded-lg flex items-center justify-center">

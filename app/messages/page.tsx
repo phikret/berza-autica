@@ -18,6 +18,7 @@ function MessagesContent() {
   const [error, setError] = useState<string | null>(null)
   const [unreadCount, setUnreadCount] = useState(0)
   const initAttemptedRef = useRef(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Auto-dismiss error nakon 5 sekundi
   useEffect(() => {
@@ -26,6 +27,11 @@ function MessagesContent() {
       return () => clearTimeout(timer)
     }
   }, [error])
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -182,7 +188,7 @@ function MessagesContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Error Toast */}
       {error && (
         <div className="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-fade-in">
@@ -196,7 +202,7 @@ function MessagesContent() {
           </button>
         </div>
       )}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Poruke</h1>
           <Link href="/" className="text-primary-600 hover:text-primary-700">
@@ -204,11 +210,11 @@ function MessagesContent() {
           </Link>
         </div>
 
-        <div className="bg-white rounded-lg shadow overflow-hidden" style={{ height: '600px' }}>
-          <div className="grid grid-cols-3 h-full">
+        <div className="bg-white rounded-lg shadow overflow-hidden flex" style={{ height: 'calc(100vh - 200px)' }}>
+          <div className="grid grid-cols-3 w-full h-full">
             {/* Conversations List */}
-            <div className="col-span-1 border-r border-gray-200 overflow-y-auto">
-              <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 sticky top-0 z-10">
+            <div className="col-span-1 border-r border-gray-200 overflow-y-auto flex flex-col min-h-0">
+              <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 sticky top-0 z-10 flex-shrink-0">
                 <div className="flex justify-between items-center">
                   <h2 className="font-semibold text-gray-800">Konverzacije</h2>
                   {unreadCount > 0 && (
@@ -218,45 +224,47 @@ function MessagesContent() {
                   )}
                 </div>
               </div>
-              {conversations.length === 0 ? (
-                <div className="p-4 text-center text-gray-500">
-                  Nemate poruka
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-200">
-                  {conversations.map((conv) => {
-                    const lastMsg = conv.lastMessage
-                    const productTitle = lastMsg?.productLinks?.[0]?.name || 'Konverzacija'
-                    
-                    return (
-                      <button
-                        key={conv.id || conv._id}
-                        onClick={() => fetchMessages(conv.id || conv._id)}
-                        className={`w-full p-4 text-left transition-colors hover:bg-gray-50 ${
-                          (selectedConversation?.conversation.id || selectedConversation?.conversation._id) === (conv.id || conv._id) 
-                            ? 'bg-blue-100 border-l-4 border-blue-600' 
-                            : ''
-                        }`}
-                      >
-                        <div className="font-medium text-gray-900 text-sm truncate">
-                          {productTitle}
-                        </div>
-                        {conv.lastMessage && (
-                          <div className="text-xs text-gray-600 truncate mt-1">
-                            {conv.lastMessage.content}
+              <div className="flex-1 overflow-y-auto">
+                {conversations.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    Nemate poruka
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-200">
+                    {conversations.map((conv) => {
+                      const lastMsg = conv.lastMessage
+                      const productTitle = lastMsg?.productLinks?.[0]?.name || 'Konverzacija'
+                      
+                      return (
+                        <button
+                          key={conv.id || conv._id}
+                          onClick={() => fetchMessages(conv.id || conv._id)}
+                          className={`w-full p-4 text-left transition-colors hover:bg-gray-50 ${
+                            (selectedConversation?.conversation.id || selectedConversation?.conversation._id) === (conv.id || conv._id) 
+                              ? 'bg-blue-100 border-l-4 border-blue-600' 
+                              : ''
+                          }`}
+                        >
+                          <div className="font-medium text-gray-900 text-sm truncate">
+                            {productTitle}
                           </div>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
+                          {conv.lastMessage && (
+                            <div className="text-xs text-gray-600 truncate mt-1">
+                              {conv.lastMessage.content}
+                            </div>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Messages */}
-            <div className="col-span-2 flex flex-col bg-gradient-to-b from-white to-gray-50">
+            <div className="col-span-2 flex flex-col bg-gradient-to-b from-white to-gray-50 min-h-0">
               {initializing && !selectedConversation ? (
-                <div className="flex-1 flex items-center justify-center text-gray-600">
+                <div className="flex-1 flex items-center justify-center text-gray-600 min-h-0">
                   <div className="text-center">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
                     <p>Inicijalizujem konverzaciju...</p>
@@ -264,12 +272,12 @@ function MessagesContent() {
                 </div>
               ) : selectedConversation ? (
                 <>
-                  <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+                  <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 flex-shrink-0">
                     <h2 className="font-semibold text-gray-800">
                       {selectedConversation.otherParticipant.name}
                     </h2>
                   </div>
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
                     {messages.map((msg: any, idx) => (
                       <div
                         key={idx}
@@ -288,8 +296,9 @@ function MessagesContent() {
                         </div>
                       </div>
                     ))}
+                    <div ref={messagesEndRef} />
                   </div>
-                  <form onSubmit={sendMessage} className="p-4 border-t border-gray-200 bg-white">
+                  <form onSubmit={sendMessage} className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -308,7 +317,7 @@ function MessagesContent() {
                   </form>
                 </>
               ) : (
-                <div className="flex-1 flex items-center justify-center text-gray-600">
+                <div className="flex-1 flex items-center justify-center text-gray-600 min-h-0">
                   <div className="text-center">
                     <p className="text-lg">Izaberite konverzaciju</p>
                     <p className="text-sm text-gray-500 mt-2">ili pokrenite novu</p>

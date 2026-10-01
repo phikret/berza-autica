@@ -61,6 +61,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search') || ''
     const categoryId = searchParams.get('categoryId')
+    const scale = searchParams.get('scale')
     const sort = searchParams.get('sort') || 'recent'
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
@@ -81,6 +82,10 @@ console.log(page,limit);
 
     if (categoryId) {
       where.categoryId = categoryId
+    }
+
+    if (scale) {
+      where.scale = scale
     }
 
     // Build order by clause
