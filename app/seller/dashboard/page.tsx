@@ -18,6 +18,7 @@ export default function SellerDashboard() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalProducts, setTotalProducts] = useState(0)
   const [pageSize, setPageSize] = useState(20)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     if (!session) {
@@ -25,12 +26,19 @@ export default function SellerDashboard() {
       return
     }
     fetchData()
-  }, [session, page, pageSize])
+  }, [session, page, pageSize, searchQuery])
 
   const fetchData = async () => {
     try {
+      const params = new URLSearchParams()
+      params.append('page', page.toString())
+      params.append('pageSize', pageSize.toString())
+      if (searchQuery) {
+        params.append('search', searchQuery)
+      }
+
       const [productsRes, balanceRes] = await Promise.all([
-        fetch(`/api/seller/products?page=${page}&pageSize=${pageSize}`),
+        fetch(`/api/seller/products?${params}`),
         fetch('/api/balance'),
       ])
 
@@ -175,6 +183,18 @@ export default function SellerDashboard() {
           </div>
         ) : (
           <>
+            <div className="mb-6">
+              <input
+                type="text"
+                placeholder="Pretraži svoje modele..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setPage(1)
+                }}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500 transition-all shadow-sm"
+              />
+            </div>
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -185,10 +205,6 @@ export default function SellerDashboard() {
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                       <div className="flex flex-col items-end gap-1">
                         <span>Akcije</span>
-                      </div>
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      <div className="flex flex-col items-end gap-1">
                         <span className="text-blue-600 font-semibold text-sm">Ukupno: {totalProducts}</span>
                       </div>
                     </th>

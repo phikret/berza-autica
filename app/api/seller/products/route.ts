@@ -24,20 +24,29 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = parseInt(searchParams.get('pageSize') || '20')
+    const search = searchParams.get('search') || ''
     const skip = (page - 1) * pageSize
+
+    // Build where clause for search
+    const whereClause: any = {
+      sellerId,
+    }
+
+    if (search) {
+      whereClause.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ]
+    }
 
     // Get total count
     const total = await prisma.product.count({
-      where: {
-        sellerId,
-      },
+      where: whereClause,
     })
 
     // Get products for the page
     let products = await prisma.product.findMany({
-      where: {
-        sellerId,
-      },
+      where: whereClause,
       include: {
         category: true,
         seller: {
