@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useSession } from 'next-auth/react'
 import MessageBadge from './MessageBadge'
+import WishlistBadge from './WishlistBadge'
 
 export default function Header() {
   const { data: session, status } = useSession()
@@ -33,8 +34,9 @@ export default function Header() {
                   Moji proizvodi
                 </Link>
 
-                <Link href="/wishlist" className="text-blue-900 hover:text-blue-900 font-semibold transition-colors">
+                <Link href="/wishlist" className="text-blue-900 hover:text-blue-900 font-semibold transition-colors relative">
                   Lista želja
+                  <WishlistBadge />
                 </Link>
 
                 <Link href="/messages" className="text-blue-900 hover:text-blue-900 font-semibold transition-colors relative">

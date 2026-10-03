@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 
 export default function ProfilePage() {
   const { data: session } = useSession()
@@ -19,6 +20,8 @@ export default function ProfilePage() {
   })
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [adminId, setAdminId] = useState<string | null>(null)
+  const [sendingMessage, setSendingMessage] = useState(false)
 
   useEffect(() => {
     if (!session) {
@@ -26,6 +29,7 @@ export default function ProfilePage() {
       return
     }
     fetchBalance()
+    fetchAdmin()
   }, [session])
 
   const fetchBalance = async () => {
@@ -40,6 +44,53 @@ export default function ProfilePage() {
       console.error('Error fetching balance:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchAdmin = async () => {
+    try {
+      const response = await fetch('/api/admin/contact')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.admin) {
+          setAdminId(data.admin.id)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching admin:', error)
+    }
+  }
+
+  const handleContactAdmin = async () => {
+    if (!adminId) {
+      toast.error('Administrator nije dostupan')
+      return
+    }
+
+    setSendingMessage(true)
+    try {
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receiverId: adminId,
+          content: 'Zdravo, zanima me kako da dopunim tokene, hvala',
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        toast.success('Poruka je poslata administratoru')
+        router.push(`/messages?sellerId=${adminId}`)
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || 'Greška pri slanju poruke')
+      }
+    } catch (error) {
+      console.error('Error contacting admin:', error)
+      toast.error('Greška pri slanju poruke')
+    } finally {
+      setSendingMessage(false)
     }
   }
 
@@ -131,9 +182,13 @@ export default function ProfilePage() {
             <div className="text-4xl font-bold text-primary-600">
               {balance} tokena
             </div>
-            <p className="text-sm text-gray-600 mt-2">
-              Za dopunu tokena kontaktiraj administratora
-            </p>
+            <button
+              onClick={handleContactAdmin}
+              disabled={sendingMessage || !adminId}
+              className="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              {sendingMessage ? 'Slanje...' : 'Kontaktiraj administratora'}
+            </button>
           </div>
         </div>
 

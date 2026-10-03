@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useSession } from 'next-auth/react'
 import { toast } from 'sonner'
@@ -19,9 +19,19 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
   const [inWishlist, setInWishlist] = useState(isInWishlist)
   const [isLoading, setIsLoading] = useState(false)
 
+  // Sync inWishlist state with prop changes
+  useEffect(() => {
+    setInWishlist(isInWishlist)
+  }, [isInWishlist])
+
   const handleSellerClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     window.location.href = `/seller/${product.seller.id}`
+  }
+
+  const handleViewWishlist = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    window.location.href = '/wishlist'
   }
 
   const handleWishlistClick = async (e: React.MouseEvent) => {
@@ -43,6 +53,8 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
           setInWishlist(false)
           onWishlistChange?.(false)
           toast.success('Proizvod je uklonjen iz liste želja')
+          // Dispatch custom event to update badge
+          window.dispatchEvent(new Event('wishlistChanged'))
         } else {
           const error = await response.json()
           console.error('Error removing from wishlist:', error)
@@ -65,6 +77,8 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
           setInWishlist(true)
           onWishlistChange?.(true)
           toast.success('Proizvod je dodan u listu želja!')
+          // Dispatch custom event to update badge
+          window.dispatchEvent(new Event('wishlistChanged'))
         } else {
           console.error('Error adding to wishlist:', responseData)
           toast.error(`Greška: ${responseData.error}`)
@@ -143,6 +157,18 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
               className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
             />
             
+            {/* Contact Seller Button Overlay - Only show when in wishlist */}
+            {inWishlist && (
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <button
+                  onClick={handleViewWishlist}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-all"
+                >
+                  Prikazi listu
+                </button>
+              </div>
+            )}
+            
             {/* Wishlist Button */}
             <button
               onClick={handleWishlistClick}
@@ -152,15 +178,49 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
               } disabled:opacity-50`}
               title={inWishlist ? 'Ukloni iz liste želja' : 'Dodaj u listu želja'}
             >
-              <svg
-                className={`w-6 h-6 ${inWishlist ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
-                viewBox="0 0 24 24"
-                fill={inWishlist ? 'currentColor' : 'none'}
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
+              {inWishlist ? (
+                // Same icon as header badge - list with red checkmark
+                <span className="relative inline-block">
+                  <svg
+                    className="w-6 h-6 text-blue-900"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                    />
+                  </svg>
+                  {/* Red checkmark badge */}
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center bg-red-600 text-white rounded-full w-4 h-4">
+                    <svg
+                      className="w-2.5 h-2.5"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </span>
+                </span>
+              ) : (
+                // Outline list icon when not in wishlist
+                <svg
+                  className="w-6 h-6 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+              )}
             </button>
           </div>
         )}

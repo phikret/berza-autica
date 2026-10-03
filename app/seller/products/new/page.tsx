@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import ImageUploadDragDrop from '@/app/components/ImageUploadDragDrop'
 
 export default function NewProduct() {
   const { data: session } = useSession()
@@ -89,15 +90,6 @@ export default function NewProduct() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files) {
-      setSelectedFiles([])
-      return
-    }
-    setSelectedFiles(Array.from(files).slice(0, 5))
   }
 
   return (
@@ -200,38 +192,15 @@ export default function NewProduct() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Slike - učitaj direktno sa računara *
+              <label className="block text-sm font-medium text-gray-700 mb-4">
+                Slike - prevucite ili kliknite za učitavanje *
               </label>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleFileChange}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              <ImageUploadDragDrop
+                maxFiles={5}
+                selectedFiles={selectedFiles}
+                previewUrls={previewUrls}
+                onFilesSelected={setSelectedFiles}
               />
-              <p className="mt-2 text-sm text-slate-500">Možete izabrati 1 do 5 slika. Preporučeno: JPEG/PNG.</p>
-              {selectedFiles.length > 0 && (
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {selectedFiles.map((file, index) => (
-                    <div key={index} className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 shadow-sm">
-                      <div className="relative h-36 w-full bg-slate-100">
-                        {previewUrls[index] ? (
-                          <img
-                            src={previewUrls[index]}
-                            alt={file.name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : null}
-                      </div>
-                      <div className="p-3 text-sm text-slate-700">
-                        <div className="font-medium text-slate-900 truncate">{file.name}</div>
-                        <div className="mt-1 text-xs text-slate-500">{Math.round(file.size / 1024)} KB</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
             <div className="flex gap-4">

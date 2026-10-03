@@ -46,7 +46,17 @@ export default function Home() {
     }
 
     fetchWishlist()
-  }, [session?.user])
+
+    // Listen for wishlist changes from ProductCard
+    const handleWishlistChange = () => {
+      fetchWishlist()
+    }
+    window.addEventListener('wishlistChanged', handleWishlistChange)
+
+    return () => {
+      window.removeEventListener('wishlistChanged', handleWishlistChange)
+    }
+  }, [session])
 
   useEffect(() => {
     fetchProducts()
