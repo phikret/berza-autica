@@ -165,7 +165,7 @@ export default function SellerDashboard() {
           </div>
         </div>
 
-        {products.length === 0 ? (
+        {products.length === 0 && !searchQuery ? (
           <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-blue-700">
               <span className="text-2xl font-bold">+</span>
@@ -195,6 +195,27 @@ export default function SellerDashboard() {
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500 transition-all shadow-sm"
               />
             </div>
+            {products.length === 0 && searchQuery ? (
+              <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                  <span className="text-2xl">🔍</span>
+                </div>
+                <h2 className="text-2xl font-semibold text-slate-900 mb-3">Nema proizvoda sa tim imenom</h2>
+                <p className="mx-auto max-w-xl text-sm leading-7 text-slate-600 mb-8">
+                  Pokušajte sa drugačijim pojmom pretrage ili očistite pretragu da vidite sve svoje proizvode.
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery('')
+                    setPage(1)
+                  }}
+                  className="inline-flex items-center justify-center rounded-full bg-blue-600 px-7 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                >
+                  Očisti pretragu
+                </button>
+              </div>
+            ) : (
+              <>
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -338,6 +359,8 @@ export default function SellerDashboard() {
                   Sledeća →
                 </button>
               </div>
+            )}
+              </>
             )}
           </>
         )}
