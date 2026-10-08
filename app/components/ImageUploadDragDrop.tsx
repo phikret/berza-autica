@@ -8,6 +8,7 @@ interface ImageUploadDragDropProps {
   onFilesSelected: (files: File[]) => void
   selectedFiles?: File[]
   previewUrls?: string[]
+  onClearAll?: () => void
 }
 
 export default function ImageUploadDragDrop({
@@ -15,6 +16,7 @@ export default function ImageUploadDragDrop({
   onFilesSelected,
   selectedFiles = [],
   previewUrls = [],
+  onClearAll,
 }: ImageUploadDragDropProps) {
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -73,7 +75,9 @@ export default function ImageUploadDragDrop({
     }
   }
 
-  const removeFile = (index: number) => {
+  const removeFile = (index: number, e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
     const newFiles = selectedFiles.filter((_, i) => i !== index)
     onFilesSelected(newFiles)
   }
@@ -140,9 +144,24 @@ export default function ImageUploadDragDrop({
       {/* File Preview Grid */}
       {selectedFiles.length > 0 && (
         <div>
-          <p className="mb-3 text-sm font-medium text-slate-700">
-            Učitane slike ({selectedFiles.length}/{maxFiles})
-          </p>
+          <div className="flex justify-between items-center mb-3">
+            <p className="text-sm font-medium text-slate-700">
+              Učitane slike ({selectedFiles.length}/{maxFiles})
+            </p>
+            {onClearAll && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onClearAll()
+                }}
+                className="text-xs text-red-600 hover:text-red-700 font-medium"
+              >
+                Obriši sve
+              </button>
+            )}
+          </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {selectedFiles.map((file, index) => (
               <div
@@ -158,7 +177,8 @@ export default function ImageUploadDragDrop({
                     />
                   ) : null}
                   <button
-                    onClick={() => removeFile(index)}
+                    type="button"
+                    onClick={(e) => removeFile(index, e)}
                     className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100 rounded-full bg-red-600 p-1.5 text-white shadow-md hover:bg-red-700"
                   >
                     <svg

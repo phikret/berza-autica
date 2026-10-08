@@ -52,6 +52,18 @@ export default function NewProduct() {
     }
   }
 
+  const isFormValid = () => {
+    // Provjera da li su sva polja ispunjena
+    if (!formData.name.trim()) return false
+    if (!formData.description.trim()) return false
+    if (formData.description.trim().length < 10) return false
+    if (!formData.price || parseFloat(formData.price) <= 0) return false
+    if (!formData.categoryId) return false
+    if (!formData.scale) return false
+    if (selectedFiles.length === 0) return false
+    return true
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -104,11 +116,26 @@ export default function NewProduct() {
         <div className="bg-white rounded-lg shadow p-8">
           <h1 className="text-3xl font-bold mb-6">Novi proizvod</h1>
 
-          {error && (
-            <div className="bg-red-50 text-red-800 p-4 rounded mb-6">
-              {error}
-            </div>
-          )}
+            {error && (
+              <div className="bg-red-50 text-red-800 p-4 rounded mb-6">
+                {error}
+              </div>
+            )}
+
+            {!isFormValid() && (
+              <div className="bg-amber-50 text-amber-800 p-4 rounded mb-6">
+                <p className="font-semibold mb-2">Popunite sve obavezne polje:</p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  {!formData.name.trim() && <li>Naziv proizvoda je obavezan</li>}
+                  {!formData.description.trim() && <li>Opis je obavezan</li>}
+                  {formData.description.trim().length < 10 && formData.description.trim() && <li>Opis mora imati najmanje 10 karaktera</li>}
+                  {!formData.price || parseFloat(formData.price) <= 0 && <li>Cena mora biti veća od 0</li>}
+                  {!formData.categoryId && <li>Izaberite kategoriju</li>}
+                  {!formData.scale && <li>Izaberite razmeru</li>}
+                  {selectedFiles.length === 0 && <li>Trebate da dodate barem jednu sliku</li>}
+                </ul>
+              </div>
+            )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -135,6 +162,9 @@ export default function NewProduct() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
+              <p className={`text-sm mt-1 ${formData.description.trim().length < 10 ? 'text-red-600' : 'text-gray-500'}`}>
+                {formData.description.trim().length} / 10 karaktera (minimum)
+              </p>
             </div>
 
             <div>
@@ -200,13 +230,14 @@ export default function NewProduct() {
                 selectedFiles={selectedFiles}
                 previewUrls={previewUrls}
                 onFilesSelected={setSelectedFiles}
+                onClearAll={() => setSelectedFiles([])}
               />
             </div>
 
             <div className="flex gap-4">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={!isFormValid() || loading}
                 className="flex-1 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Postavljanje...' : 'Sačuvaj oglas'}
