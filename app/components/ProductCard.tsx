@@ -139,6 +139,120 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
     )
   }
 
+  // Featured variant - large showcase card
+  if (promoted) {
+    return (
+      <div
+        onClick={() => window.location.href = `/products/${product.slug}`}
+        className="cursor-pointer"
+      >
+        <div className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+          {/* Image Section with Istaknuto Badge */}
+          {product.images && product.images[0] && (
+            <div className="relative h-62 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden group">
+              <Image
+                src={product.images[0]}
+                alt={product.name}
+                fill
+                className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+              />
+              
+              {/* Istaknuto Badge - Top Right */}
+              <div className="absolute top-4 right-4">
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 px-4 py-2 rounded-full font-bold text-sm shadow-lg hover:shadow-xl transition-all">
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Dot indicators - Bottom */}
+              <div className="absolute bottom-4 right-0 transform -translate-x-5 flex gap-2">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full opacity-50"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full opacity-50"></div>
+              </div>
+            </div>
+          )}
+          
+          {/* Content Section */}
+          <div className="p-5 pt-4 space-y-1">
+            
+            {/* Scale and Category */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-lg">
+                <span className="text-sm font-semibold text-gray-700">{product.scale}</span>
+              </div>
+              <span className="text-sm text-gray-500">|</span>
+              <span className="text-sm text-gray-600">{typeof product.category === 'string' ? product.category : product.category?.name || 'Kategorija'}</span>
+            </div>
+
+            {/* Title */}
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 leading-tight">
+                {product.name}
+              </h2>
+            </div>
+
+            {/* Description */}
+            <p className="text-gray-600 text-base leading-relaxed">
+              {product.description}
+            </p>
+
+            {/* Price Section */}
+            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+              <div>
+                <p className="text-xs text-gray-500 font-medium mb-1">CENA</p>
+                <p className="text-xl font-bold text-gray-900">
+                  {product.price} RSD
+                </p>
+              </div>
+            </div>
+
+            {/* Seller and Time Info */}
+            <div className="flex items-center gap-6 pt-2">
+              <div 
+                className="flex items-center gap-2 cursor-pointer hover:text-blue-600 transition-colors"
+                onClick={handleSellerClick}
+              >
+                <svg
+                  className="w-5 h-5 text-gray-600"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
+                <span className="text-sm font-semibold text-gray-900">{product.seller.name}</span>
+              </div>
+              <div className="flex items-center gap-2 text-gray-500">
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <rect x="3" y="3" width="4" height="4" />
+                  <rect x="10" y="3" width="4" height="4" />
+                  <rect x="17" y="3" width="4" height="4" />
+                  <rect x="3" y="10" width="4" height="4" />
+                  <rect x="10" y="10" width="4" height="4" />
+                  <rect x="17" y="10" width="4" height="4" />
+                  <rect x="3" y="17" width="4" height="4" />
+                  <rect x="10" y="17" width="4" height="4" />
+                  <rect x="17" y="17" width="4" height="4" />
+                </svg>
+                <span className="text-sm">Svi oglasi</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Default and seller variants - card layout. When in seller page, do not show 'Show all'
   return (
     <div
@@ -229,10 +343,6 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
         <div className="p-4 space-y-3">
             
           {/* Badge and Category */}
-           {promoted && (
-            <div className="inline-block bg-yellow-100 text-yellow-700 text-xs font-semibold px-3 py-1 rounded-full">
-                    Istaknuto
-            </div>)}
           <div className="flex items-start gap-3 mb-3">
            
              <div>
@@ -247,14 +357,12 @@ export default function ProductCard({ product, promoted = false, variant = 'defa
 
             <div id="left" className="flex-1">
                 <div className="flex flex-col gap-2 mb-0">
-                  {promoted && (
-                    <div className="inline-flex items-center gap-2 w-fit">
-                      {/* Description */}
+                  <div className="inline-flex items-center gap-2 w-fit">
+                    {/* Description */}
                     <p className="text-sm text-gray-500 line-clamp-2">
-                    {product.description}
-                  </p>
-                </div>
-                )}
+                      {product.description}
+                    </p>
+                  </div>
                 </div>
             </div>            
             <div id="right" className="flex-shrink-0">

@@ -26,13 +26,16 @@ export default function LoginPage() {
 
       if (result?.error) {
         setError(result.error)
+        setLoading(false)
       } else {
+        // Sesija je ispravna - osvežavamo stranicu da se sesija učita pravilno
         router.push('/')
         router.refresh()
+        // Čekamo malo da se refresh završi
+        await new Promise(resolve => setTimeout(resolve, 500))
       }
     } catch (err) {
       setError('Došlo je do greške pri prijavljivanju')
-    } finally {
       setLoading(false)
     }
   }

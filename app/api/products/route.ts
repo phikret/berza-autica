@@ -17,38 +17,39 @@ const createProductSchema = z.object({
 
 async function parseProductRequest(request: NextRequest) {
   const contentType = request.headers.get('content-type') || ''
-
   if (contentType.includes('multipart/form-data')) {
-    const formData = await request.formData()
-    const name = formData.get('name')?.toString() || ''
-    const description = formData.get('description')?.toString() || ''
-    const priceString = formData.get('price')?.toString() || ''
-    const categoryId = formData.get('categoryId')?.toString() || ''
-    const scale = formData.get('scale')?.toString() || '1:64'
+      const formData = await request.formData()
+console.log("formData", formData)
 
-    const imageItems = formData.getAll('images')
-    const images: string[] = []
+      const name = formData.get('name')?.toString() || ''
+      const description = formData.get('description')?.toString() || ''
+      const priceString = formData.get('price')?.toString() || ''
+      const categoryId = formData.get('categoryId')?.toString() || ''
+      const scale = formData.get('scale')?.toString() || '1:64'
 
-    for (const item of imageItems) {
-      if (item instanceof File) {
-        if (!item.type.startsWith('image/')) {
-          throw new Error('Samo slike su dozvoljene za upload')
+      const imageItems = formData.getAll('images')
+      const images: string[] = []
+
+      for (const item of imageItems) {
+        if (item instanceof File) {
+          if (!item.type.startsWith('image/')) {
+            throw new Error('Samo slike su dozvoljene za upload')
+          }
+            const imageUrl = await uploadImage(item)
+            images.push(imageUrl)
+        } else if (typeof item === 'string' && item.trim()) {
+          images.push(item.trim())
         }
-        const imageUrl = await uploadImage(item)
-        images.push(imageUrl)
-      } else if (typeof item === 'string' && item.trim()) {
-        images.push(item.trim())
       }
-    }
 
-    return {
-      name,
-      description,
-      price: parseInt(priceString, 10),
-      categoryId,
-      scale,
-      images,
-    }
+      return {
+        name,
+        description,
+        price: parseInt(priceString, 10),
+        categoryId,
+        scale,
+        images,
+      }
   }
 
   const body = await request.json()

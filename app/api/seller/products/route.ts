@@ -6,7 +6,12 @@ import { removeExpiredPromotions } from '@/lib/services/products'
 
 /**
  * GET /api/seller/products
- * Returns all products (active and inactive) for the authenticated seller
+ * Returns all products for the authenticated seller
+ * Query params:
+ *   - page: page number (default: 1)
+ *   - pageSize: items per page (default: 20)
+ *   - search: search query
+ *   - filter: filter type (all/active/inactive/promoted, default: all)
  * Requires authentication
  */
 export async function GET(request: NextRequest) {
@@ -25,6 +30,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = parseInt(searchParams.get('pageSize') || '20')
     const search = searchParams.get('search') || ''
+    const filter = searchParams.get('filter') || 'all'
     const skip = (page - 1) * pageSize
 
     // Build where clause for search
@@ -38,6 +44,16 @@ export async function GET(request: NextRequest) {
         { description: { contains: search, mode: 'insensitive' } },
       ]
     }
+
+    // Apply filter (exclusive options)
+    if (filter === 'active') {
+      whereClause.isActive = true
+    } else if (filter === 'inactive') {
+      whereClause.isActive = false
+    } else if (filter === 'promoted') {
+      whereClause.isPromoted = true
+    }
+    // If 'all', no additional filter applied
 
     // Get total count
     const total = await prisma.product.count({

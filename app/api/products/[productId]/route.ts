@@ -20,43 +20,63 @@ async function parseUpdateProductRequest(request: NextRequest) {
   const contentType = request.headers.get('content-type') || ''
 
   if (contentType.includes('multipart/form-data')) {
-    const formData = await request.formData()
-    const name = formData.get('name')?.toString()
-    const description = formData.get('description')?.toString()
-    const priceString = formData.get('price')?.toString()
-    const categoryId = formData.get('categoryId')?.toString()
-    const scale = formData.get('scale')?.toString()
-    const existingImagesStr = formData.get('existingImages')?.toString() || '[]'
-    const isActiveStr = formData.get('isActive')?.toString()
+    try {
+      const formData = await request.formData()
+      const name = formData.get('name')?.toString()
+      const description = formData.get('description')?.toString()
+      const priceString = formData.get('price')?.toString()
+      const categoryId = formData.get('categoryId')?.toString()
+      const scale = formData.get('scale')?.toString()
+      const existingImagesStr = formData.get('existingImages')?.toString() || '[]'
+      const isActiveStr = formData.get('isActive')?.toString()
 
-    const existingImages: string[] = JSON.parse(existingImagesStr)
-    const imageItems = formData.getAll('images')
-    const newImages: string[] = []
-
-    for (const item of imageItems) {
-      if (item instanceof File) {
-        if (!item.type.startsWith('image/')) {
-          throw new Error('Samo slike su dozvoljene za upload')
-        }
-        const imageUrl = await uploadImage(item)
-        newImages.push(imageUrl)
+      let existingImages: string[] = []
+      try {
+        existingImages = JSON.parse(existingImagesStr)
+      } catch (parseError) {
+        console.error('Error parsing existingImages JSON:', parseError)
+        existingImages = []
       }
+
+      const imageItems = formData.getAll('images')
+      const newImages: string[] = []
+
+      for (const item of imageItems) {
+        if (item instanceof File) {
+          if (!item.type.startsWith('image/')) {
+            throw new Error('Samo slike su dozvoljene za upload')
+          }
+          try {
+            const imageUrl = await uploadImage(item)
+            newImages.push(imageUrl)
+          } catch (uploadError) {
+            console.error('Image upload failed:', uploadError)
+            throw new Error(`Image upload failed: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`)
+          }
+        }
+      }
+
+      const images = [...existingImages, ...newImages]
+
+      const result: any = {
+        images: images.length > 0 ? images : undefined,
+      }
+
+      if (name) result.name = name
+      if (description) result.description = description
+      if (priceString) result.price = parseInt(priceString, 10)
+      if (categoryId) result.categoryId = categoryId
+      if (scale) result.scale = scale
+      if (isActiveStr !== undefined && isActiveStr !== '') result.isActive = isActiveStr === 'true'
+
+      return result
+    } catch (error) {
+      console.error('Error in parseUpdateProductRequest:', error)
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error('Failed to parse form data')
     }
-
-    const images = [...existingImages, ...newImages]
-
-    const result: any = {
-      images: images.length > 0 ? images : undefined,
-    }
-
-    if (name) result.name = name
-    if (description) result.description = description
-    if (priceString) result.price = parseInt(priceString, 10)
-    if (categoryId) result.categoryId = categoryId
-    if (scale) result.scale = scale
-    if (isActiveStr !== undefined && isActiveStr !== '') result.isActive = isActiveStr === 'true'
-
-    return result
   }
 
   const body = await request.json()

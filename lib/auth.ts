@@ -55,6 +55,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
         token.role = (user as any).role
+        console.log('[JWT] Token kreiran sa:', { id: token.id, email: token.email, role: token.role })
       }
       return token
     },
@@ -62,8 +63,18 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = token.id as string
         (session.user as any).role = token.role as string
+        console.log('[SESSION] Session callback:', { id: token.id, email: token.email, role: token.role })
+      } else {
+        console.log('[SESSION] Nema user objekta u sesiji!')
       }
       return session
+    },
+    async redirect({ url, baseUrl }) {
+      // Ako korisnik pokušava pristupiti zaštićenoj stranici tijekom logovanja,
+      // pusti ga da ide tamo. Inače, pusti ga na /seller/products
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      else if (new URL(url).origin === baseUrl) return url
+      return `${baseUrl}/seller/products`
     },
   },
   pages: {
@@ -72,6 +83,18 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
   },
   secret: process.env.NEXTAUTH_SECRET,
 }

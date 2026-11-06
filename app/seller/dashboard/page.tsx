@@ -19,6 +19,7 @@ export default function SellerDashboard() {
   const [totalProducts, setTotalProducts] = useState(0)
   const [pageSize, setPageSize] = useState(20)
   const [searchQuery, setSearchQuery] = useState('')
+  const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'promoted'>('all')
 
   useEffect(() => {
     if (!session) {
@@ -26,7 +27,7 @@ export default function SellerDashboard() {
       return
     }
     fetchData()
-  }, [session, page, pageSize, searchQuery])
+  }, [session, page, pageSize, searchQuery, filter])
 
   const fetchData = async () => {
     try {
@@ -36,6 +37,7 @@ export default function SellerDashboard() {
       if (searchQuery) {
         params.append('search', searchQuery)
       }
+      params.append('filter', filter)
 
       const [productsRes, balanceRes] = await Promise.all([
         fetch(`/api/seller/products?${params}`),
@@ -165,7 +167,7 @@ export default function SellerDashboard() {
           </div>
         </div>
 
-        {products.length === 0 && !searchQuery ? (
+        {products.length === 0 && !searchQuery && filter === 'all' ? (
           <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-blue-700">
               <span className="text-2xl font-bold">+</span>
@@ -195,24 +197,80 @@ export default function SellerDashboard() {
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500 transition-all shadow-sm"
               />
             </div>
-            {products.length === 0 && searchQuery ? (
+            <div className="mb-6 flex flex-wrap gap-2">
+              <button
+                onClick={() => {
+                  setFilter('all')
+                  setPage(1)
+                }}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  filter === 'all'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 border border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                Svi proizvodi
+              </button>
+              <button
+                onClick={() => {
+                  setFilter('active')
+                  setPage(1)
+                }}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  filter === 'active'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-white text-gray-700 border border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                Aktivni
+              </button>
+              <button
+                onClick={() => {
+                  setFilter('inactive')
+                  setPage(1)
+                }}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  filter === 'inactive'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-white text-gray-700 border border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                Neaktivni
+              </button>
+              <button
+                onClick={() => {
+                  setFilter('promoted')
+                  setPage(1)
+                }}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  filter === 'promoted'
+                    ? 'bg-yellow-600 text-white'
+                    : 'bg-white text-gray-700 border border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                ⭐ Promovisan
+              </button>
+            </div>
+            {products.length === 0 ? (
               <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
                 <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-700">
                   <span className="text-2xl">🔍</span>
                 </div>
-                <h2 className="text-2xl font-semibold text-slate-900 mb-3">Nema proizvoda sa tim imenom</h2>
+                <h2 className="text-2xl font-semibold text-slate-900 mb-3">Nema proizvoda sa tim kriterijumima</h2>
                 <p className="mx-auto max-w-xl text-sm leading-7 text-slate-600 mb-8">
-                  Pokušajte sa drugačijim pojmom pretrage ili očistite pretragu da vidite sve svoje proizvode.
+                  {searchQuery ? 'Pokušajte sa drugačijim pojmom pretrage.' : 'Nema proizvoda sa trenutnim filterima.'}
                 </p>
-                <button
-                  onClick={() => {
-                    setSearchQuery('')
-                    setPage(1)
-                  }}
-                  className="inline-flex items-center justify-center rounded-full bg-blue-600 px-7 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
-                >
-                  Očisti pretragu
-                </button>
+                {searchQuery ? (
+                  <button
+                    onClick={() => {
+                      setSearchQuery('')
+                      setPage(1)
+                    }}
+                    className="inline-flex items-center justify-center rounded-full bg-blue-600 px-7 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                  >
+                    Očisti pretragu
+                  </button>
+                ) : null}
               </div>
             ) : (
               <>

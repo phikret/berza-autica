@@ -8,3 +8,8 @@ node_modules
 .vercel
 .env*
 .next
+
+# Listing uploader
+*kupujemprodajem@gmail.com.json
+scripts/listing-uploader/node_modules
+scripts/listing-uploader/.env

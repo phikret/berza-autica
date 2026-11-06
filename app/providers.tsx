@@ -5,7 +5,7 @@ import { ToasterProvider } from './components/ToasterProvider'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider>
+    <SessionProvider refetchInterval={5 * 60} refetchOnWindowFocus={true}>
       <ToasterProvider />
       {children}
     </SessionProvider>

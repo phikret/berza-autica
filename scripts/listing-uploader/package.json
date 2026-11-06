@@ -1,0 +1,19 @@
+{
+  "name": "listing-uploader",
+  "version": "1.0.0",
+  "description": "Automatizovani uploader oglasa na kupujem-prodajem.com",
+  "type": "module",
+  "scripts": {
+    "start": "node src/uploader.js",
+    "dev": "node --watch src/uploader.js",
+    "advanced": "node src/uploader-advanced.js",
+    "test": "node test-localhost.js",
+    "test-api": "node local-test.js",
+    "dry-run": "node src/uploader-advanced.js --dry-run",
+    "test-first-5": "node src/uploader-advanced.js --listings=5 --headless=false"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0",
+    "dotenv": "^16.4.5"
+  }
+}

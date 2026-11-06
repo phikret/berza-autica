@@ -21,6 +21,7 @@ export default function Home() {
   const [totalPages, setTotalPages] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set())
+  const [sortBy, setSortBy] = useState<'newest' | 'wishlist'>('newest')
 
   // Available scales
   const scales = ['1:18', '1:24', '1:32', '1:43', '1:64', '1:87', '1:100', '1:144', '1:200']
@@ -103,6 +104,21 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const getSortedProducts = () => {
+    if (sortBy === 'wishlist' && wishlistIds.size > 0) {
+      return [...products].sort((a, b) => {
+        const aInWishlist = wishlistIds.has(a.id)
+        const bInWishlist = wishlistIds.has(b.id)
+        
+        // Proizvodi u wishlist-u na vrhu
+        if (aInWishlist && !bInWishlist) return -1
+        if (!aInWishlist && bInWishlist) return 1
+        return 0
+      })
+    }
+    return products
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -159,6 +175,16 @@ export default function Home() {
               <option value="25">25 po stranici</option>
               <option value="50">50 po stranici</option>
             </select>
+            <select
+              value={sortBy}
+              onChange={(e) => {
+                setSortBy(e.target.value as 'newest' | 'wishlist')
+              }}
+              className="px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 transition-all shadow-sm font-medium"
+            >
+              <option value="newest">Najnoviji</option>
+              {session && <option value="wishlist">Moja lista želja na vrhu</option>}
+            </select>
           </div>
         </div>
       </div>
@@ -167,7 +193,7 @@ export default function Home() {
         {/* Promoted Products */}
         {promotedProducts.length > 0 && (
           <section className="mb-12">
-            <h2 className="text-2xl font-bold mb-6">Istaknuti proizvodi</h2>
+            <h2 className="text-2xl font-bold mb-6 border-2 border-yellow-400 px-4 py-2 rounded inline-block">Istaknuti proizvodi</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {promotedProducts.map((product) => (
                 <ProductCard 
@@ -202,7 +228,7 @@ export default function Home() {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {products.map((product) => (
+                {getSortedProducts().map((product) => (
                   <ProductCard 
                     key={product.id} 
                     product={product}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import ImageUploadDragDrop from '@/app/components/ImageUploadDragDrop'
 
 export default function EditProduct({ params }: { params: Promise<{ productId: string }> }) {
   const { data: session } = useSession()
@@ -124,16 +125,6 @@ export default function EditProduct({ params }: { params: Promise<{ productId: s
     } finally {
       setSaving(false)
     }
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files) {
-      setSelectedFiles([])
-      return
-    }
-    const maxNew = Math.max(0, 5 - (existingImages.length - imagesToRemove.length))
-    setSelectedFiles(Array.from(files).slice(0, maxNew))
   }
 
   const toggleImageRemoval = (image: string) => {
@@ -284,40 +275,16 @@ export default function EditProduct({ params }: { params: Promise<{ productId: s
 
             {canAddMoreImages && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dodaj nove slike ({selectedFiles.length} nova)
+                <label className="block text-sm font-medium text-gray-700 mb-4">
+                  Dodaj nove slike - prevucite ili kliknite za učitavanje ({selectedFiles.length} nova)
                 </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFileChange}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                <ImageUploadDragDrop
+                  maxFiles={5 - (existingImages.length - imagesToRemove.length)}
+                  selectedFiles={selectedFiles}
+                  previewUrls={previewUrls}
+                  onFilesSelected={setSelectedFiles}
+                  onClearAll={() => setSelectedFiles([])}
                 />
-                <p className="mt-2 text-sm text-slate-500">
-                  Možete dodati još {5 - currentImageCount} slika. Preporučeno: JPEG/PNG.
-                </p>
-                {selectedFiles.length > 0 && (
-                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {selectedFiles.map((file, index) => (
-                      <div key={index} className="overflow-hidden rounded-3xl border border-green-300 bg-green-50 shadow-sm">
-                        <div className="relative h-36 w-full bg-slate-100">
-                          {previewUrls[index] ? (
-                            <img
-                              src={previewUrls[index]}
-                              alt={file.name}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : null}
-                        </div>
-                        <div className="p-3 text-sm text-slate-700">
-                          <div className="font-medium text-slate-900 truncate">{file.name}</div>
-                          <div className="mt-1 text-xs text-slate-500">{Math.round(file.size / 1024)} KB</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             )}
 
