@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import Header from '../../components/Header'
 
 export default function ProductDetail() {
   const params = useParams()
@@ -137,7 +138,9 @@ export default function ProductDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <Header />
+      <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Link href="/" className="text-primary-600 hover:text-primary-700 mb-6 inline-block">
           ← Nazad na proizvode
@@ -342,7 +345,8 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }
 

@@ -243,17 +243,39 @@ export default function EditProduct({ params }: { params: Promise<{ productId: s
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Postojeće slike ({existingImages.length - imagesToRemove.length}/{existingImages.length})
               </label>
+              <p className="text-xs text-slate-500 mb-3">
+                💡 Prevucite slike da biste promenili redosled. Prva slika je thumbnail. Kliknite na sliku da je obrišete.
+              </p>
               {existingImages.length > 0 && (
                 <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {existingImages.map((image, index) => (
                     <div
                       key={index}
-                      className={`overflow-hidden rounded-3xl border-2 transition-all ${
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.effectAllowed = 'move'
+                        e.dataTransfer.setData('existingImageIndex', index.toString())
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault()
+                        e.dataTransfer.dropEffect = 'move'
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault()
+                        const sourceIndex = parseInt(e.dataTransfer.getData('existingImageIndex'))
+                        if (sourceIndex === index) return
+                        
+                        const newImages = [...existingImages]
+                        const [movedImage] = newImages.splice(sourceIndex, 1)
+                        newImages.splice(index, 0, movedImage)
+                        setExistingImages(newImages)
+                      }}
+                      onClick={() => toggleImageRemoval(image)}
+                      className={`overflow-hidden rounded-3xl border-2 transition-all cursor-move ${
                         imagesToRemove.includes(image)
                           ? 'border-red-300 bg-red-50 opacity-50'
-                          : 'border-slate-200 bg-slate-50'
-                      } shadow-sm cursor-pointer`}
-                      onClick={() => toggleImageRemoval(image)}
+                          : 'border-slate-200 bg-slate-50 hover:border-blue-400'
+                      } shadow-sm`}
                     >
                       <div className="relative h-36 w-full bg-slate-100">
                         <img
@@ -261,11 +283,23 @@ export default function EditProduct({ params }: { params: Promise<{ productId: s
                           alt={`Product image ${index + 1}`}
                           className="h-full w-full object-cover"
                         />
+                        {/* First Image Badge */}
+                        {index === 0 && !imagesToRemove.includes(image) && (
+                          <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
+                            </svg>
+                            Thumb
+                          </div>
+                        )}
                         {imagesToRemove.includes(image) && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
                             <span className="text-white font-semibold">Obriši</span>
                           </div>
                         )}
+                      </div>
+                      <div className="p-2 text-xs text-slate-600 text-center">
+                        Kliknite da obrišete
                       </div>
                     </div>
                   ))}

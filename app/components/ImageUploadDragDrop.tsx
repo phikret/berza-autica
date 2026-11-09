@@ -83,6 +83,7 @@ export default function ImageUploadDragDrop({
 }: ImageUploadDragDropProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [isCompressing, setIsCompressing] = useState(false)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -152,6 +153,30 @@ export default function ImageUploadDragDrop({
     e.preventDefault()
     e.stopPropagation()
     const newFiles = selectedFiles.filter((_, i) => i !== index)
+    onFilesSelected(newFiles)
+  }
+
+  const handleDragStartImage = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('imageIndex', index.toString())
+  }
+
+  const handleDragOverImage = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDropImage = (e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragOverIndex(null)
+
+    const sourceIndex = parseInt(e.dataTransfer.getData('imageIndex'))
+    if (sourceIndex === targetIndex) return
+
+    const newFiles = [...selectedFiles]
+    const [movedFile] = newFiles.splice(sourceIndex, 1)
+    newFiles.splice(targetIndex, 0, movedFile)
     onFilesSelected(newFiles)
   }
 
@@ -229,6 +254,9 @@ export default function ImageUploadDragDrop({
             <p className="text-sm font-medium text-slate-700">
               Učitane slike ({selectedFiles.length}/{maxFiles})
             </p>
+            <p className="text-xs text-slate-500">
+              💡 Prevucite slike da biste promenili redosled. Prva slika je thumbnail.
+            </p>
             {onClearAll && (
               <button
                 type="button"
@@ -247,7 +275,17 @@ export default function ImageUploadDragDrop({
             {selectedFiles.map((file, index) => (
               <div
                 key={index}
-                className="group overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm transition-all hover:shadow-md"
+                draggable
+                onDragStart={(e) => handleDragStartImage(e, index)}
+                onDragOver={handleDragOverImage}
+                onDrop={(e) => handleDropImage(e, index)}
+                onDragEnter={() => setDragOverIndex(index)}
+                onDragLeave={() => setDragOverIndex(null)}
+                className={`group overflow-hidden rounded-2xl border-2 bg-slate-50 shadow-sm transition-all hover:shadow-md cursor-move ${
+                  dragOverIndex === index
+                    ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-300'
+                    : 'border-slate-200'
+                } ${index === 0 ? 'ring-2 ring-green-500' : ''}`}
               >
                 <div className="relative h-40 w-full bg-slate-100">
                   {previewUrls[index] ? (
@@ -257,10 +295,38 @@ export default function ImageUploadDragDrop({
                       className="h-full w-full object-cover"
                     />
                   ) : null}
+                  
+                  {/* First Image Badge */}
+                  {index === 0 && (
+                    <div className="absolute top-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
+                      </svg>
+                      Thumbnail
+                    </div>
+                  )}
+
+                  {/* Drag Handle Badge */}
+                  <div className="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100 rounded-full bg-slate-900 bg-opacity-70 p-1.5 text-white shadow-md">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 8h16M4 16h16"
+                      />
+                    </svg>
+                  </div>
+
                   <button
                     type="button"
                     onClick={(e) => removeFile(index, e)}
-                    className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100 rounded-full bg-red-600 p-1.5 text-white shadow-md hover:bg-red-700"
+                    className="absolute right-2 bottom-2 opacity-0 transition-opacity group-hover:opacity-100 rounded-full bg-red-600 p-1.5 text-white shadow-md hover:bg-red-700"
                   >
                     <svg
                       className="h-4 w-4"
